@@ -1,0 +1,8 @@
+target/
+classes/
+*~
+.DS_Store
+
+### IntelliJ ###
+.idea
+*.iml

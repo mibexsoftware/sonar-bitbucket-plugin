@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ch.mibex.bitbucket</groupId>
+    <artifactId>sonar-bitbucket-plugin</artifactId>
+    <version>1.0.0</version>
+    <packaging>sonar-plugin</packaging>
+    <name>Sonar Bitbucket Plugin</name>
+
+    <description>SonarQube plugin to create pull request comments for found issues in Bitbucket.</description>
+    <url>https://github.com/mibexsoftware/sonar-bitbucket-plugin</url>
+
+    <organization>
+        <name>Mibex Software GmbH</name>
+        <url>http://www.mibexsoftware.com</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
+    </licenses>
+
+    <repositories>
+        <repository>
+            <id>scala-tools</id>
+            <name>Scala Tools</name>
+            <url>http://scala-tools.org/repo-releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
+    <properties>
+        <sonar.version>4.5.4</sonar.version>
+        <sonar.pluginKey>sonarbitbucket</sonar.pluginKey>
+        <sonar.pluginName>Bitbucket for Sonar</sonar.pluginName>
+        <sonar.pluginClass>ch.mibex.bitbucket.sonar.SonarBitbucketPlugin</sonar.pluginClass>
+        <scala.version>2.11</scala.version>
+        <scala.full.version>2.11.6</scala.full.version>
+        <!--
+            we use quite an old Specs2 version here because newer versions tend to have problems with IntelliJ's
+            test runner (cannot run individual tests anymore)
+        -->
+        <specs2.version>2.3.11</specs2.version>
+    </properties>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/mibexsoftware/sonar-bitbucket-plugin/issues</url>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git:git://github.com/mibexsoftware/sonar-bitbucket-plugin.git</connection>
+        <developerConnection>scm:git:git://github.com/mibexsoftware/sonar-bitbucket-plugin.git</developerConnection>
+        <url>https://github.com/mibexsoftware/sonar-bitbucket-plugin</url>
+    </scm>
+
+    <dependencies>
+        <!-- Sonar -->
+        <dependency>
+            <groupId>org.codehaus.sonar</groupId>
+            <artifactId>sonar-plugin-api</artifactId>
+            <version>${sonar.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Scala -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.full.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-parser-combinators</artifactId>
+            <version>${scala.version}.0-M4</version>
+        </dependency>
+
+		<!-- Jersey -->
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.14</version>
+        </dependency>
+
+        <!-- Spray JSON -->
+        <dependency>
+            <groupId>io.spray</groupId>
+            <artifactId>spray-json_${scala.version}</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+
+        <!-- otherwise we get compiler warnings -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-project</artifactId>
+            <version>2.2.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Unit tests -->
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2_${scala.version}</artifactId>
+            <version>${specs2.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-matcher-extra_${scala.version}</artifactId>
+            <version>${specs2.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.sonar</groupId>
+                <artifactId>sonar-packaging-maven-plugin</artifactId>
+                <version>1.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <pluginClass>ch.mibex.bitbucket.sonar.SonarBitbucketPlugin</pluginClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <version>2.15.2</version>
+                <executions>
+                    <execution>
+                        <id>scala-compile</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Spec.class</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
