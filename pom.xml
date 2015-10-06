@@ -8,7 +8,7 @@
     <packaging>sonar-plugin</packaging>
     <name>Sonar Bitbucket Plugin</name>
 
-    <description>SonarQube plugin to create pull request comments for found issues in Bitbucket.</description>
+    <description>SonarQube plug-in to create pull request comments for found issues in Bitbucket.</description>
     <url>https://github.com/mibexsoftware/sonar-bitbucket-plugin</url>
 
     <organization>
