@@ -8,7 +8,7 @@ Bitbucket cloud. It creates a summary of the found issues as a global pull reque
 
 ![Screenshot global pull request comment plugin](doc/global-comment.png)
 
-For every found issues on changed or new lines of the pull request, it will also create a pull request comment with
+For every found issue on changed or new lines of the pull request, it will also create a pull request comment with
 the severity, the explanation what this issue is about and a link to get more details about it:
 
 ![Screenshot global pull request comment plugin](doc/example-issue.png)
