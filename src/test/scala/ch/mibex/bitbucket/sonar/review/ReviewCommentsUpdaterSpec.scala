@@ -3,7 +3,7 @@ package ch.mibex.bitbucket.sonar.review
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest, PullRequestComment}
 import ch.mibex.bitbucket.sonar.diff.IssuesOnChangedLinesFilter
-import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, PluginConfiguration, SonarBitbucketPlugin}
+import ch.mibex.bitbucket.sonar.{PluginConfiguration, SonarBitbucketPlugin}
 import org.junit.runner.RunWith
 import org.sonar.api.config.{PropertyDefinitions, Settings}
 import org.sonar.api.issue.{Issue, ProjectIssues}

@@ -46,7 +46,8 @@ class BitbucketClient(config: PluginConfiguration) extends BatchComponent {
   }
 
   def findPullRequestsWithSourceBranch(branchName: String): Seq[PullRequest] = {
-    def fetchPageOfResults(start: Int): (Option[Int], Seq[PullRequest]) =
+
+    def fetchPullRequestsPage(start: Int): (Option[Int], Seq[PullRequest]) =
       fetchPage("/pullrequests", queryParm = ("state", "OPEN"), f =
         response =>
           for (pullRequest <- response("values").asInstanceOf[Seq[Map[String, Any]]])
@@ -56,37 +57,35 @@ class BitbucketClient(config: PluginConfiguration) extends BatchComponent {
               val dest = pullRequest("destination").asInstanceOf[Map[String, Any]]
               val dstCommitHash = dest("commit").asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String]
               val branch = source("branch").asInstanceOf[Map[String, Any]]
-              val branchName = branch("name").asInstanceOf[String]
-              val pullRequestId = pullRequest("id").asInstanceOf[Int]
-              PullRequest(id = pullRequestId,
-                          srcBranch = branchName,
+              PullRequest(id = pullRequest("id").asInstanceOf[Int],
+                          srcBranch = branch("name").asInstanceOf[String],
                           srcCommitHash = srcCommitHash,
                           dstCommitHash = dstCommitHash)
             },
         pageNr = start
       )
-    forEachPage(Seq[PullRequest](), (pageStart, pullRequests: Seq[PullRequest]) => {
-      val (nextPageStart, newPullRequests) = fetchPageOfResults(pageStart)
+    forEachResultPage(Seq[PullRequest](), (pageStart, pullRequests: Seq[PullRequest]) => {
+      val (nextPageStart, newPullRequests) = fetchPullRequestsPage(pageStart)
       (nextPageStart, pullRequests ++ newPullRequests)
     }).filter(_.srcBranch == branchName)
+
   }
 
   def findOwnPullRequestComments(pullRequest: PullRequest): Seq[PullRequestComment] = {
 
     def isFromUs(comment: Map[String, Any]) = {
-      val name = if (Option(config.teamName()).isDefined)
-        config.teamName()
-      else
-        config.accountName()
-      comment("user").asInstanceOf[Map[String, Any]]("username").asInstanceOf[String].equals(name)
+      val userName = Option(config.teamName()) match {
+        case Some(_) => config.teamName()
+        case None => config.accountName()
+      }
+      comment("user").asInstanceOf[Map[String, Any]]("username").asInstanceOf[String].equals(userName)
     }
 
-    def fetchPageOfResults(start: Int): (Option[Int], Seq[PullRequestComment]) =
+    def fetchCommentsPage(start: Int): (Option[Int], Seq[PullRequestComment]) =
       fetchPage(s"/pullrequests/${pullRequest.id}/comments",
         response =>
           for (comment <- response("values").asInstanceOf[Seq[Map[String, Any]]] if isFromUs(comment))
             yield {
-              val content = comment("content").asInstanceOf[Map[String, Any]]("raw").asInstanceOf[String]
               val pathAndLine = for {
                 inline <- comment.get("inline") map { _.asInstanceOf[Map[String, Any]] }
                 filePath <- inline.get("path") map { _.asInstanceOf[String] }
@@ -94,15 +93,15 @@ class BitbucketClient(config: PluginConfiguration) extends BatchComponent {
               } yield (filePath, line)
               PullRequestComment(
                 commentId = comment("id").asInstanceOf[Int],
-                content = content,
+                content = comment("content").asInstanceOf[Map[String, Any]]("raw").asInstanceOf[String],
                 filePath = pathAndLine.map { _._1 },
                 line = pathAndLine.map { _._2 }
               )
             },
         pageNr = start
       )
-    forEachPage(Seq[PullRequestComment](), (pageStart, comments: Seq[PullRequestComment]) => {
-      val (nextPageStart, newComments) = fetchPageOfResults(pageStart)
+    forEachResultPage(Seq[PullRequestComment](), (pageStart, comments: Seq[PullRequestComment]) => {
+      val (nextPageStart, newComments) = fetchCommentsPage(pageStart)
       (nextPageStart, comments ++ newComments)
     })
   }
@@ -119,7 +118,7 @@ class BitbucketClient(config: PluginConfiguration) extends BatchComponent {
       case 302 if response.getHeaders.containsKey("Location") =>
         val redirectTarget = response.getHeaders.getFirst("Location")
         client.resource(redirectTarget)
-          .queryParam("context", "0") // as we are not interested in context lines
+          .queryParam("context", "0") // as we are not interested in context lines here
           .get(classOf[String])
       case _ =>
         throw new IllegalArgumentException("Unexpected response " + response.getStatus)
@@ -208,8 +207,8 @@ class BitbucketClient(config: PluginConfiguration) extends BatchComponent {
     (nextPageStart, f(page))
   }
 
-  private def forEachPage[S, T](initial: S, f: (Int, S) => (Option[Int], S)) = {
-    var result: S = initial
+  private def forEachResultPage[S, T](startValue: S, f: (Int, S) => (Option[Int], S)) = {
+    var result: S = startValue
     var pageStart: Option[Int] = Some(PageStartIndex)
     while (pageStart.isDefined) {
       val (nextPageStart, next) = f(pageStart.get, result)

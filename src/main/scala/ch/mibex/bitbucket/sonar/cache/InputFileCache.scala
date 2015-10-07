@@ -1,6 +1,6 @@
 package ch.mibex.bitbucket.sonar.cache
 
-import ch.mibex.bitbucket.sonar.GitBaseDirResolver
+import ch.mibex.bitbucket.sonar.review.GitBaseDirResolver
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
 import org.sonar.api.batch.fs.InputFile

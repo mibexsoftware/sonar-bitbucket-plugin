@@ -56,7 +56,7 @@ class PullRequestResultsSpec extends Specification with Mockito {
           |
           |
           |Watch the comments in this pull request to review them. Note that only issues with severity >=
-          |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png)
+          |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) (major)
           |are shown in this pull request.""".stripMargin).ignoreSpace
       results.canBeApproved must beFalse
     }

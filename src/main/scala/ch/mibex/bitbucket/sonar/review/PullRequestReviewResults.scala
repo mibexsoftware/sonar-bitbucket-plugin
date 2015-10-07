@@ -28,9 +28,13 @@ class PullRequestReviewResults(pluginConfiguration: PluginConfiguration) {
         Severity.ALL.asScala.reverse foreach { s =>
           printNewIssuesForMarkdown(markdown, s)
         }
-        markdown.append("\n\nWatch the comments in this pull request to review them.")
+        markdown.append("\n\nWatch the comments in this pull request to review them. ")
         val severityImgMarkdown = MarkdownUtils.getImageMarkdownForSeverity(pluginConfiguration.minSeverity())
-        markdown.append(s" Note that only issues with severity >= $severityImgMarkdown are shown in this pull request.")
+        markdown.append(
+          s"""Note that only issues with severity >=
+             |$severityImgMarkdown (${pluginConfiguration.minSeverity().toLowerCase})
+             |are shown in this pull request.""".stripMargin.replaceAll("\n", " ")
+        )
     }
 
     markdown.toString()
@@ -42,13 +46,7 @@ class PullRequestReviewResults(pluginConfiguration: PluginConfiguration) {
   private def printNewIssuesForMarkdown(sb: StringBuilder, severity: String) = {
     val issueCount = newIssuesBySeverity(severity)
     if (issueCount > 0) {
-      sb.append("* ")
-        .append(MarkdownUtils.getImageMarkdownForSeverity(severity))
-        .append(" ")
-        .append(issueCount)
-        .append(" ")
-        .append(severity.toLowerCase)
-        .append("\n")
+      sb.append(s"* ${MarkdownUtils.getImageMarkdownForSeverity(severity)} $issueCount ${severity.toLowerCase}\n")
     }
   }
 

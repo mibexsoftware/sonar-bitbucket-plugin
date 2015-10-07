@@ -14,8 +14,10 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
 
   def filter(pullRequest: PullRequest, newIssues: Seq[Issue]): Seq[Issue] = {
     val diffs = parsePullRequestDiff(pullRequest)
+
     val issuesOnChangedLines = newIssues filter { i =>
       val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
+
       inputFileCache.resolveRepoRelativePath(i.componentKey()) match {
         case Some(filePath) =>
           val isIssueOnChangedLines = (diff: GitDiff) =>
@@ -25,6 +27,7 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
         case None => false  // ignore these issues
       }
     }
+
     issuesOnChangedLines
   }
 
@@ -37,7 +40,7 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
   private def parsePullRequestDiff(pullRequest: PullRequest) = {
     val diff = bitbucketClient.getPullRequestDiff(pullRequest)
     GitDiffParser.parse(diff) match {
-      case Left(parsingFailure) => throw new scala.RuntimeException(s"Failed to parse git diff $parsingFailure")
+      case Left(parsingFailure) => throw new RuntimeException(s"Failed to parse git diff due to $parsingFailure")
       case Right(gitDiffs) => gitDiffs
     }
   }

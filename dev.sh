@@ -1,11 +1,12 @@
 #!/bin/bash
 
 [ -z "$SONAR_HOME" ] && { echo "Please configure SONAR_HOME"; exit 1; }
-PLUGIN_VERSION=1.0.0
 
 mvn clean install || exit 1
 
+PLUGIN_VERSION=1.0.0
 PLUGIN_FILE="./target/sonar-bitbucket-plugin-$PLUGIN_VERSION.jar"
+
 if [ ! -f $PLUGIN_FILE ]; then
     echo "Plug-in JAR file not found: $PLUGIN_FILE"
     exit 1

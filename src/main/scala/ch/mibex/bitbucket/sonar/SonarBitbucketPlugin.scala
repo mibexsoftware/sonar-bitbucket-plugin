@@ -5,7 +5,7 @@ import java.util.{List => JList}
 import ch.mibex.bitbucket.sonar.cache.{InputFileCache, InputFileCacheSensor}
 import ch.mibex.bitbucket.sonar.client.BitbucketClient
 import ch.mibex.bitbucket.sonar.diff.IssuesOnChangedLinesFilter
-import ch.mibex.bitbucket.sonar.review.{PullRequestProjectBuilder, ReviewCommentsCreator, SonarReviewPostJob}
+import ch.mibex.bitbucket.sonar.review.{GitBaseDirResolver, PullRequestProjectBuilder, ReviewCommentsCreator, SonarReviewPostJob}
 import org.sonar.api._
 import org.sonar.api.rule.Severity
 

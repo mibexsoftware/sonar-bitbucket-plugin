@@ -1,4 +1,4 @@
-package ch.mibex.bitbucket.sonar
+package ch.mibex.bitbucket.sonar.review
 
 import java.io.File
 

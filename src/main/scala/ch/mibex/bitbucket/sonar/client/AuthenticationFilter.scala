@@ -67,7 +67,7 @@ class ClientAuthentication(config: PluginConfiguration) {
     } else if (isTeamApiKey) {
       new AuthenticationBinder with TeamApiKeyAuthentication
     } else {
-      throw new IllegalStateException("Either team-based API or an OAuth user authentication has to be used")
+      throw new IllegalStateException("Either team-based API or an OAuth user authentication has to be given")
     }
     auth.bind(client, config)
   }
@@ -78,18 +78,22 @@ class ClientAuthentication(config: PluginConfiguration) {
 
   private def createOauthAccessToken(client: Client) = {
     val oauthFilter = new HTTPBasicAuthFilter(config.oauthTokenClientKey(), config.oauthTokenClientSecret())
-    client.addFilter(oauthFilter)
-    val formData = new MultivaluedMapImpl()
-    formData.add("grant_type", "client_credentials")
-    val response = client
-      .resource("https://bitbucket.org/site/oauth2/access_token")
-      .`type`(MediaType.APPLICATION_FORM_URLENCODED)
-      .post(classOf[ClientResponse], formData)
-    val authDetails = response.getEntity(classOf[String])
-    client.removeFilter(oauthFilter)
-    JsonUtils.mapFromJson(authDetails).get("access_token") match {
-      case Some(access_token: String) => access_token
-      case _ => throw new IllegalStateException("No access token found")
+
+    try {
+      client.addFilter(oauthFilter)
+      val formData = new MultivaluedMapImpl()
+      formData.add("grant_type", "client_credentials")
+      val response = client
+        .resource("https://bitbucket.org/site/oauth2/access_token")
+        .`type`(MediaType.APPLICATION_FORM_URLENCODED)
+        .post(classOf[ClientResponse], formData)
+      val authDetails = response.getEntity(classOf[String])
+      JsonUtils.mapFromJson(authDetails).get("access_token") match {
+        case Some(access_token: String) => access_token
+        case _ => throw new IllegalStateException("No access token found")
+      }
+    } finally {
+      client.removeFilter(oauthFilter)
     }
   }
 

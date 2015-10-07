@@ -15,7 +15,8 @@ class InputFileCacheSensor(pluginConfig: PluginConfiguration,
 
   override def analyse(project: Project, context: SensorContext): Unit = {
     fileSystem.inputFiles(fileSystem.predicates().all()).asScala foreach { inputFile =>
-      inputFileCache.put(context.getResource(inputFile).getEffectiveKey, inputFile)
+      val componentKey = context.getResource(inputFile).getEffectiveKey
+      inputFileCache.put(componentKey, inputFile)
     }
   }
   

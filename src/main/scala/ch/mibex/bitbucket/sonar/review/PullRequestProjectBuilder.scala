@@ -1,6 +1,5 @@
 package ch.mibex.bitbucket.sonar.review
 
-import ch.mibex.bitbucket.sonar.GitBaseDirResolver
 import org.sonar.api.batch.bootstrap.ProjectBuilder
 
 

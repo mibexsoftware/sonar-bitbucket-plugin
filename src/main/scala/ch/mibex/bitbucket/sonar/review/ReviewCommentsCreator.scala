@@ -32,9 +32,11 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
         commentsByPathAndLine.get(file) match {
           case Some(x) if x.contains(line) =>
             val comment = commentsByPathAndLine(file)(line)
+
             if (comment.content != issues.toString()) {
               updateComment(pullRequest, issues.toString(), comment)
             }
+
             commentsToDelete.remove(comment.commentId)
           case _ =>
             createComment(pullRequest, file, line, issues.toString())
@@ -48,15 +50,18 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def processExistingComments(existingReviewComments: Seq[PullRequestComment]) = {
     val commentsByFileAndLine = new mutable.HashMap[String, mutable.Map[Int, PullRequestComment]]()
+      .withDefaultValue(new mutable.HashMap[Int, PullRequestComment]())
     val reviewCommentsToBeDeleted = new mutable.HashMap[Int, PullRequestComment]()
     val inlineComments = existingReviewComments filter { _.isInline }
 
     inlineComments foreach { c =>
-      if (!commentsByFileAndLine.contains(c.filePath.get)) {
-        commentsByFileAndLine += c.filePath.get -> new mutable.HashMap[Int, PullRequestComment]()
-      }
       reviewCommentsToBeDeleted += c.commentId -> c
-      commentsByFileAndLine(c.filePath.get) += c.line.get -> c
+
+      (c.filePath, c.line) match {
+        case (Some(path), Some(line)) =>
+          commentsByFileAndLine.update(path, commentsByFileAndLine(path) + (line -> c))
+        case _ =>
+      }
     }
 
     (commentsByFileAndLine, reviewCommentsToBeDeleted)
@@ -70,7 +75,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
     issuesOnChangedLines foreach { i =>
       if (SonarUtils.isSeverityGreaterOrEqual(i, pluginConfig.minSeverity())) {
         inputFileCache.resolveRepoRelativePath(i.componentKey()) foreach { repoRelPath =>
-          // file level comments do not have a line number!
+          // file level comments do not have a line number! we use 0 for them here
           val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
 
           if (!commentsToBeAdded.contains(repoRelPath)) {
