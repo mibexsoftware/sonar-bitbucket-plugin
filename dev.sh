@@ -7,10 +7,7 @@ mvn clean install || exit 1
 PLUGIN_VERSION=1.0.0
 PLUGIN_FILE="./target/sonar-bitbucket-plugin-$PLUGIN_VERSION.jar"
 
-if [ ! -f $PLUGIN_FILE ]; then
-    echo "Plug-in JAR file not found: $PLUGIN_FILE"
-    exit 1
-fi
+[ ! -f $PLUGIN_FILE ] && { echo "Plug-in JAR file not found: $PLUGIN_FILE"; exit 1; }
 
 $SONAR_HOME/bin/macosx-universal-64/sonar.sh stop
 

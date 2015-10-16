@@ -4,7 +4,7 @@ import ch.mibex.bitbucket.sonar.PluginConfiguration
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest, PullRequestComment}
 import ch.mibex.bitbucket.sonar.diff.IssuesOnChangedLinesFilter
-import ch.mibex.bitbucket.sonar.utils.{MarkdownUtils, SonarUtils}
+import ch.mibex.bitbucket.sonar.utils.SonarUtils
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
 import org.sonar.api.issue.ProjectIssues
@@ -83,10 +83,10 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
           }
 
           if (!commentsToBeAdded(repoRelPath).contains(lineNr)) {
-            commentsToBeAdded(repoRelPath) += lineNr -> new mutable.StringBuilder(MarkdownUtils.sonarPrefix())
+            commentsToBeAdded(repoRelPath) += lineNr -> new mutable.StringBuilder(SonarUtils.sonarMarkdownPrefix())
           }
 
-          commentsToBeAdded(repoRelPath)(lineNr).append("\n\n" + MarkdownUtils.renderIssue(i))
+          commentsToBeAdded(repoRelPath)(lineNr).append("\n\n" + SonarUtils.renderAsMarkdown(i))
         }
       }
 

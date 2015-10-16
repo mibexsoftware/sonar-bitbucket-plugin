@@ -2,7 +2,7 @@ package ch.mibex.bitbucket.sonar.review
 
 import ch.mibex.bitbucket.sonar.PluginConfiguration
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest, PullRequestComment}
-import ch.mibex.bitbucket.sonar.utils.{LogUtils, MarkdownUtils}
+import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
 import org.slf4j.LoggerFactory
 import org.sonar.api.batch.{CheckProject, PostJob, SensorContext}
 import org.sonar.api.resources.Project
@@ -57,7 +57,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
   private def deletePreviousGlobalComments(pullRequest: PullRequest, ownComments: Seq[PullRequestComment]) {
     ownComments
       .filterNot(_.isInline)
-      .filter(_.content.startsWith(MarkdownUtils.sonarPrefix()))
+      .filter(_.content.startsWith(SonarUtils.sonarMarkdownPrefix()))
       .foreach { c =>
         bitbucketClient.deletePullRequestComment(pullRequest, c.commentId)
       }
@@ -65,7 +65,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
 
   private def deleteOutdatedComments(pullRequest: PullRequest, commentsToDelete: Map[Int, PullRequestComment]) {
     commentsToDelete foreach { case (commentId, comment) =>
-      if (comment.content.startsWith(MarkdownUtils.sonarPrefix())) {
+      if (comment.content.startsWith(SonarUtils.sonarMarkdownPrefix())) {
         bitbucketClient.deletePullRequestComment(pullRequest, commentId)
       }
     }

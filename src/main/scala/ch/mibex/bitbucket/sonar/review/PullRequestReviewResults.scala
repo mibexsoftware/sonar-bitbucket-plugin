@@ -1,7 +1,7 @@
 package ch.mibex.bitbucket.sonar.review
 
 import ch.mibex.bitbucket.sonar.PluginConfiguration
-import ch.mibex.bitbucket.sonar.utils.{MarkdownUtils, StringUtils}
+import ch.mibex.bitbucket.sonar.utils.{SonarUtils, StringUtils}
 import org.sonar.api.issue.Issue
 import org.sonar.api.rule.Severity
 
@@ -18,7 +18,7 @@ class PullRequestReviewResults(pluginConfiguration: PluginConfiguration) {
 
   def formatAsMarkdown(): String = {
     val markdown = new StringBuilder()
-    markdown.append(s"${MarkdownUtils.sonarPrefix()} reported ")
+    markdown.append(s"${SonarUtils.sonarMarkdownPrefix()} reported ")
 
     newIssuesBySeverity.values.toList match {
       case Nil =>
@@ -29,7 +29,7 @@ class PullRequestReviewResults(pluginConfiguration: PluginConfiguration) {
           printNewIssuesForMarkdown(markdown, s)
         }
         markdown.append("\n\nWatch the comments in this pull request to review them. ")
-        val severityImgMarkdown = MarkdownUtils.getImageMarkdownForSeverity(pluginConfiguration.minSeverity())
+        val severityImgMarkdown = SonarUtils.toImageMarkdown(pluginConfiguration.minSeverity())
         markdown.append(
           s"""Note that only issues with severity >=
              |$severityImgMarkdown (${pluginConfiguration.minSeverity().toLowerCase})
@@ -41,12 +41,14 @@ class PullRequestReviewResults(pluginConfiguration: PluginConfiguration) {
   }
 
   def canBeApproved: Boolean =
+    // there does not seam to be a way to check the quality gates in preview mode, so we make an assumption about
+    // what users would consider good quality here :-)
     newIssuesBySeverity(Severity.CRITICAL) == 0 && newIssuesBySeverity(Severity.BLOCKER) == 0
 
   private def printNewIssuesForMarkdown(sb: StringBuilder, severity: String) = {
     val issueCount = newIssuesBySeverity(severity)
     if (issueCount > 0) {
-      sb.append(s"* ${MarkdownUtils.getImageMarkdownForSeverity(severity)} $issueCount ${severity.toLowerCase}\n")
+      sb.append(s"* ${SonarUtils.toImageMarkdown(severity)} $issueCount ${severity.toLowerCase}\n")
     }
   }
 

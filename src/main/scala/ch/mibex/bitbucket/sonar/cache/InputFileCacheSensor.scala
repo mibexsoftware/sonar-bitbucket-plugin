@@ -1,8 +1,8 @@
 package ch.mibex.bitbucket.sonar.cache
 
 import ch.mibex.bitbucket.sonar.PluginConfiguration
-import org.sonar.api.batch.{Sensor, SensorContext}
 import org.sonar.api.batch.fs.FileSystem
+import org.sonar.api.batch.{Sensor, SensorContext}
 import org.sonar.api.resources.Project
 
 import scala.collection.JavaConverters._
