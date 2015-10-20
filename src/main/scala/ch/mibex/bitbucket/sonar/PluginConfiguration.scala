@@ -55,6 +55,8 @@ class PluginConfiguration(settings: Settings) extends BatchComponent {
     if (!isEnabled) {
       logger.info(LogUtils.f("Plug-in considered disabled as Bitbucket account name is not configured."))
       return false
+    } else {
+      logger.warn(LogUtils.f("Plug-in is enabled."))
     }
     require(isIllegalCharReplacementValid,
       s"Only the following characters are allowed as replacement: ${SonarUtils.ValidIllegalBranchNameReplacementChars}"
