@@ -65,8 +65,13 @@ class ClientAuthenticationSpec extends Specification with Mockito {
       there was one(client).resource("https://bitbucket.org/site/oauth2/access_token")
     }
 
-    "abort if no valid authentication is configured" in new AuthContext {
+    "abort if no valid authentication is configured and plug-in is enabled" in new AuthContext {
+      settings.setProperty(SonarBitbucketPlugin.BitbucketAccountName, "xxxxxxxxx")
       authentication.configure(client) must throwA[IllegalStateException]
+    }
+
+    "do not throw an exception if the plug-in is disabled" in new AuthContext {
+      authentication.configure(client)
     }
 
   }
