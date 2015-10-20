@@ -18,21 +18,25 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
   def filter(pullRequest: PullRequest, newIssues: Seq[Issue]): Seq[Issue] = {
     val diffs = parsePullRequestDiff(pullRequest)
 
+    def isNewFile(filePath: String, diff: GitDiff) = diff.gitDiffHeader.newFile == filePath
+
     val issuesOnChangedLines = newIssues filter { i =>
       val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
 
       inputFileCache.resolveRepoRelativePath(i.componentKey()) match {
         case Some(filePath) =>
-          val isIssueOnChangedLines = (diff: GitDiff) =>
-            (diff.gitDiffHeader.newFile == filePath || diff.gitDiffHeader.oldFile == filePath) &&
-              (diff.isNewFile || isOnChangedLine(lineNr, diff))
+          val isIssueOnChangedLines = (diff: GitDiff) => {
+            isOnChangedLine(lineNr, diff)
+//            (diff.gitDiffHeader.newFile == filePath || diff.gitDiffHeader.oldFile == filePath) &&
+//              (diff.isNewFile || isOnChangedLine(lineNr, diff))
+          }
           val res = diffs.exists(isIssueOnChangedLines)
           if (!res) {
-            logger.warn(LogUtils.f(s"Ignore issue 1: {}"), i.message)
+            logger.warn(LogUtils.f(s"Ignore issue 1: {}"), i)
           }
           res
         case None =>
-          logger.warn(LogUtils.f(s"Ignore issue 2: {}"), i.message)
+          logger.warn(LogUtils.f(s"Ignore issue 2: {}"), i)
           false  // ignore these issues
       }
     }

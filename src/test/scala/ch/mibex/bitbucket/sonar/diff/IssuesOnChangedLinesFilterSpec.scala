@@ -118,7 +118,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
 
   val diff =
     """diff --git a/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java b/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java
-      |index 57b70a8..fc8f0d5 100755
+      |index 57b70a8..d6e8952 100755
       |--- a/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java
       |+++ b/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java
       |@@ -12 +12 @@ public class App
@@ -127,7 +127,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
       |@@ -16 +16 @@ public class App
       |-        System.out.println( "Hello World! " + d);
       |+        System.out.println( "Hello World! " + g);
-      |@@ -17,0 +18,8 @@ public class App
+      |@@ -17,0 +18,10 @@ public class App
       |+
       |+	public void foo () {
       |+		int f = 42;
@@ -136,6 +136,8 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
       |+        } catch (Throwable t) {
       |+        }
       |+	}
+      |+
+      |+	private void foo3() { }
       |diff --git a/multimod/src/db/src/test/java/ch/mycompany/test/db/AppTest.java b/multimod/src/db/src/test/java/ch/mycompany/test/db/AppTest.java
       |deleted file mode 100755
       |index 4545ecc..0000000
@@ -183,15 +185,17 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
       |-    }
       |-}
       |diff --git a/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java b/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java
-      |index 356f4b7..f5b8743 100755
+      |index 356f4b7..6ca26ea 100755
       |--- a/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java
       |+++ b/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java
-      |@@ -26,2 +26,2 @@ public class App
+      |@@ -8,0 +9 @@ public class App
+      |+        double d = Double.longBitsToDouble(42);  // Noncompliant
+      |@@ -26,2 +27,2 @@ public class App
       |-        int i = 100023;
       |-        System.exit(-1);
       |+        int i = 100024;
       |+         System.exit(-1);
-      |@@ -40,0 +41,7 @@ public class App
+      |@@ -40,0 +42,7 @@ public class App
       |+
       |+    private void foo2() {
       |+        int baba = 5555;
@@ -231,6 +235,18 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
       |+        return displayId;
       |+    }
       |+}
+      |diff --git a/sonar.json b/sonar.json
+      |index 69165e1..b8fc582 100644
+      |--- a/sonar.json
+      |+++ b/sonar.json
+      |@@ -0,0 +1 @@
+      |+<<<<<<< destination:d657f52f8f651d212c3399785bff035ae29bdd99
+      |@@ -3,0 +5,5 @@
+      |+=======
+      |+{
+      |+	'sonarHost': 'https://myhost.com',
+      |+	'sonarProjectKey': 'ch.mycompany.test:multimod:develop'
+      |+>>>>>>> source:c778919ef079ad35688c7f5dc2ecb42aee57ae56
       |""".stripMargin
 
 }
