@@ -48,6 +48,7 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
 
   private def parsePullRequestDiff(pullRequest: PullRequest) = {
     val diff = bitbucketClient.getPullRequestDiff(pullRequest)
+    logger.error(LogUtils.f("diff: {}"), diff)
     GitDiffParser.parse(diff) match {
       case Left(parsingFailure) => throw new RuntimeException(s"Failed to parse git diff due to $parsingFailure")
       case Right(gitDiffs) => gitDiffs

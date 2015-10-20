@@ -27,7 +27,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
   }
 
   override def shouldExecuteOnProject(project: Project): Boolean = {
-    logger.warn(LogUtils.f("\nPlug-in config: {}\n"), pluginConfig)
+    logger.debug(LogUtils.f("\nPlug-in config: {}\n"), pluginConfig)
     pluginConfig.validate()
   }
 
