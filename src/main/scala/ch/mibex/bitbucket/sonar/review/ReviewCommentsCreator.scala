@@ -71,9 +71,9 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def processIssues(pullRequest: PullRequest, reviewResults: PullRequestReviewResults) = {
     val newIssues = collectNewIssuesInProject()
-    logger.warn(LogUtils.f(s"Found ${newIssues.size} new issues"))
+    logger.debug(LogUtils.f(s"Found ${newIssues.size} new issues."))
     val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, newIssues)
-    logger.warn(LogUtils.f(s"And ${issuesOnChangedLines.size} are on changed lines"))
+    logger.debug(LogUtils.f(s"And ${issuesOnChangedLines.size} of these are on changed lines."))
     val commentsToBeAdded = new mutable.HashMap[String, mutable.Map[Int, mutable.StringBuilder]]()
 
     issuesOnChangedLines foreach { i =>
