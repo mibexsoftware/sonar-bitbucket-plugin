@@ -64,7 +64,7 @@ class PluginConfiguration(settings: Settings, server: Server) extends BatchCompo
       return false
     }
     require(isIllegalCharReplacementValid,
-      s"Only the following characters are allowed as replacement: ${SonarUtils.ValidIllegalBranchNameReplacementChars}"
+      s"Only the following characters are allowed as replacement: ${SonarUtils.LegalBranchNameReplacementChars}"
     )
     require(Option(repoSlug()).nonEmpty, "A repository slug must be set")
     require(Option(branchName()).nonEmpty, "The branch to analyze must be given")

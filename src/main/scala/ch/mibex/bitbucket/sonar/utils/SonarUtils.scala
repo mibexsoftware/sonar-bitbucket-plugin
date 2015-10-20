@@ -9,11 +9,11 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 object SonarUtils {
+  val LegalBranchNameReplacementChars = """[0-9a-zA-Z:\-_.]*"""
   private val SeverityImagesRootUrl =
     """https://raw.githubusercontent.com/mibexsoftware/
       |sonar-bitbucket-plugin/master/src/main/resources/images/severity""".stripMargin.replaceAll("\n", "")
-  val ValidIllegalBranchNameReplacementChars = """[0-9a-zA-Z:\-_.]*"""
-
+  
   def isSeverityGreaterOrEqual(issue: Issue, referenceSeverity: String): Boolean = {
     val severities = Severity.ALL.asScala
     val issueSeverityIdx = severities.indexOf(issue.severity())
@@ -24,7 +24,7 @@ object SonarUtils {
   }
 
   def isLegalBranchNameReplacement(replacement: String): Boolean =
-    replacement.matches(ValidIllegalBranchNameReplacementChars)
+    replacement.matches(LegalBranchNameReplacementChars)
 
   def sonarMarkdownPrefix(): String = "**SonarQube Analysis**"
 

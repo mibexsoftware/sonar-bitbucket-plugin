@@ -90,7 +90,7 @@
             <version>${scala.version}.0-M4</version>
         </dependency>
 
-		<!-- Jersey -->
+        <!-- Jersey -->
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-client</artifactId>
