@@ -3,14 +3,18 @@ package ch.mibex.bitbucket.sonar.diff
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest}
 import ch.mibex.bitbucket.sonar.diff.GitDiffParser.GitDiff
+import ch.mibex.bitbucket.sonar.utils.LogUtils
+import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
 import org.sonar.api.issue.Issue
+import scala.collection.JavaConverters._
 
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
                                  inputFileCache: InputFileCache) extends BatchComponent {
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def filter(pullRequest: PullRequest, newIssues: Seq[Issue]): Seq[Issue] = {
     val diffs = parsePullRequestDiff(pullRequest)
@@ -23,8 +27,14 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
           val isIssueOnChangedLines = (diff: GitDiff) =>
             (diff.gitDiffHeader.newFile == filePath || diff.gitDiffHeader.oldFile == filePath) &&
               (diff.isNewFile || isOnChangedLine(lineNr, diff))
-          diffs.exists(isIssueOnChangedLines)
-        case None => false  // ignore these issues
+          val res = diffs.exists(isIssueOnChangedLines)
+          if (!res) {
+            logger.warn(LogUtils.f(s"Ignore issue 1: {}"), i.comments().asScala.mkString(","))
+          }
+          res
+        case None =>
+          logger.warn(LogUtils.f(s"Ignore issue 2: {}"), i.comments().asScala.mkString(","))
+          false  // ignore these issues
       }
     }
 

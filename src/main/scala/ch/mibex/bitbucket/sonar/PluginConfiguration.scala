@@ -5,12 +5,13 @@ import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
 import org.sonar.api.config.Settings
+import org.sonar.api.platform.Server
 import org.sonar.api.rule.Severity
 
 import scala.collection.JavaConverters._
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-class PluginConfiguration(settings: Settings) extends BatchComponent {
+class PluginConfiguration(settings: Settings, server: Server) extends BatchComponent {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def isEnabled: Boolean =
@@ -55,9 +56,8 @@ class PluginConfiguration(settings: Settings) extends BatchComponent {
     if (!isEnabled) {
       logger.info(LogUtils.f("Plug-in considered disabled as Bitbucket account name is not configured."))
       return false
-    } else {
-      logger.warn(LogUtils.f("Plug-in is enabled."))
     }
+    logger.info(LogUtils.f("SonarQube version: {}"), server.getVersion)
     require(isIllegalCharReplacementValid,
       s"Only the following characters are allowed as replacement: ${SonarUtils.ValidIllegalBranchNameReplacementChars}"
     )

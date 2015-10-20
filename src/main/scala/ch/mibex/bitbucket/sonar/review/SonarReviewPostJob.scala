@@ -8,7 +8,7 @@ import org.sonar.api.batch.{CheckProject, PostJob, SensorContext}
 import org.sonar.api.resources.Project
 
 
-// due to https://jira.sonarsource.com/browse/SONAR-6398, a post job is not called on SonarQube 5.0!
+// due to https://jira.sonarsource.com/browse/SONAR-6398, a post job is not called on SonarQube 5.1.0!
 class SonarReviewPostJob(bitbucketClient: BitbucketClient,
                          pluginConfig: PluginConfiguration,
                          reviewCommentsUpdater: ReviewCommentsCreator) extends PostJob with CheckProject {
