@@ -35,7 +35,7 @@ mvn clean install
 After having copied the plugin's JAR in `{SONARQUBE_INSTALL_DIRECTORY}/extensions/plugins`, you need to restart your
 SonarQube instance.
 
-### Configuration Jenkins
+### Configuration for Jenkins with Maven
 
 You need to run this plug-in as part of your build. Add a build step of type `Execute shell` to your Jenkins job with
 the following content:
@@ -75,3 +75,22 @@ issues are created by this account opposed to when a personal account is taken. 
 (yet) support technical users as GitHub does, so we have to use either a user or team account here.
 
 After the next commit, you should be able to see comments in your pull request on Bitbucket.
+
+
+### Configuration for Bamboo with Maven
+
+You need to run this plug-in as part of your build. Add a build task of type `Maven 3.x` to your Bamboo job with
+the following goal:
+ 
+```
+clean verify sonar:sonar --batch-mode --errors \
+     -Dsonar.bitbucket.repoSlug=YOUR_BITBUCKET_REPO_SLUG \
+     -Dsonar.bitbucket.accountName=YOUR_BITBUCKET_ACCOUNT_NAME \
+     -Dsonar.bitbucket.teamName=YOUR_BITBUCKET_TEAM_NAME \
+     -Dsonar.bitbucket.apiKey=YOUR_BITBUCKET_API_KEY \
+     -Dsonar.bitbucket.branchName=${bamboo.repository.git.branch} \
+     -Dsonar.host.url=http://YOUR_SONAR_SERVER \
+     -Dsonar.login=YOUR_SONAR_LOGIN \
+     -Dsonar.password=YOUR_SONAR_PASSWORD \
+     -Dsonar.analysis.mode=incremental
+```
