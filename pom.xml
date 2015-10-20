@@ -6,9 +6,9 @@
     <artifactId>sonar-bitbucket-plugin</artifactId>
     <version>1.0.0</version>
     <packaging>sonar-plugin</packaging>
-    <name>Sonar Bitbucket Plugin</name>
+    <name>Sonar Bitbucket Cloud Plugin</name>
 
-    <description>SonarQube plug-in to create pull request comments for found issues in Bitbucket.</description>
+    <description>SonarQube plug-in to create pull request comments for found issues in Bitbucket Cloud.</description>
     <url>https://github.com/mibexsoftware/sonar-bitbucket-plugin</url>
 
     <organization>

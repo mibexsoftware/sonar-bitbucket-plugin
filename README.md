@@ -1,10 +1,10 @@
-# Bitbucket plug-in for SonarQube
+# Bitbucket Cloud plug-in for SonarQube
 
 ![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)
 
-This SonarQube plug-in creates pull request comments for issues found in your Bitbucket pull requests. It is very
+This SonarQube plug-in creates pull request comments for issues found in your Bitbucket Cloud pull requests. It is very
 similar and inspired by the [SonarQube Github plug-in](https://github.com/SonarCommunity/sonar-github), but targets 
-Bitbucket cloud. It creates a summary of the found issues as a global pull request comment which looks like this:
+Bitbucket Cloud. It creates a summary of the found issues as a global pull request comment which looks like this:
 
 ![Screenshot global pull request comment plugin](doc/global-comment.png)
 
@@ -16,7 +16,8 @@ the severity, the explanation what this issue is about and a link to get more de
 ## Usage
 
 ### Prerequisites
-- SonarQube 4.5.x
+- SonarQube >= 4.5.x (note that the plug-in does not work with SonarQube 5.1.0, as this contains a bug which prevents
+the plug-in from working correctly; see https://jira.sonarsource.com/browse/SONAR-6398; please use 5.1.2 instead)
 - A Bitbucket account
 - Maven 3.x + JDK 1.7 (to manually build it)
 
