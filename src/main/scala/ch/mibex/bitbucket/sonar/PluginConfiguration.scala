@@ -13,7 +13,7 @@ import scala.collection.JavaConverters._
 class PluginConfiguration(settings: Settings) extends BatchComponent {
   private val logger = LoggerFactory.getLogger(getClass)
 
-  private def isEnabled: Boolean =
+  def isEnabled: Boolean =
     settings.hasKey(SonarBitbucketPlugin.BitbucketAccountName)
 
   def accountName(): String =

@@ -60,16 +60,17 @@ class AuthenticationBinder {
 class ClientAuthentication(config: PluginConfiguration) {
 
   def configure(client: Client): Unit = {
-    val auth = if (isUserOauth) {
-      new AuthenticationBinder with UserOauthAuthentication {
+    if (isUserOauth) {
+      val auth = new AuthenticationBinder with UserOauthAuthentication {
         oauthAccessToken = createOauthAccessToken(client)
       }
+      auth.bind(client, config)
     } else if (isTeamApiKey) {
-      new AuthenticationBinder with TeamApiKeyAuthentication
-    } else {
+      val auth = new AuthenticationBinder with TeamApiKeyAuthentication
+      auth.bind(client, config)
+    } else if (config.isEnabled) {
       throw new IllegalStateException("Either team-based API or an OAuth user authentication has to be given")
     }
-    auth.bind(client, config)
   }
 
   private def isTeamApiKey = Option(config.teamName()).nonEmpty
