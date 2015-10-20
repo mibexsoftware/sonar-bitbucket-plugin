@@ -8,6 +8,8 @@ import com.sun.jersey.api.client.{Client, ClientResponse, WebResource}
 import com.sun.jersey.core.util.MultivaluedMapImpl
 import org.junit.runner.RunWith
 import org.mockito
+import org.sonar.api.platform.Server
+
 //import org.mockito.Answers.RETURNS_DEEP_STUBS
 //import org.mockito.Mockito.withSettings
 import org.sonar.api.config.{PropertyDefinitions, Settings}
@@ -23,7 +25,8 @@ class ClientAuthenticationSpec extends Specification with Mockito {
 
   class AuthContext extends Scope {
     val settings = new Settings(new PropertyDefinitions(classOf[SonarBitbucketPlugin]))
-    val pluginConfig = new PluginConfiguration(settings)
+    val server = mock[Server]
+    val pluginConfig = new PluginConfiguration(settings, server)
     val authentication = new ClientAuthentication(pluginConfig)
     val client = mock[Client] //(withSettings.defaultAnswer(RETURNS_DEEP_STUBS.get))
   }

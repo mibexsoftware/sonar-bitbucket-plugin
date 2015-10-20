@@ -7,6 +7,7 @@ import ch.mibex.bitbucket.sonar.{PluginConfiguration, SonarBitbucketPlugin}
 import org.junit.runner.RunWith
 import org.sonar.api.config.{PropertyDefinitions, Settings}
 import org.sonar.api.issue.{Issue, ProjectIssues}
+import org.sonar.api.platform.Server
 import org.sonar.api.rule.{RuleKey, Severity}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -170,7 +171,8 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
 
   class ReviewContext extends Scope {
     val settings = new Settings(new PropertyDefinitions(classOf[SonarBitbucketPlugin]))
-    val pluginConfig = new PluginConfiguration(settings)
+    val server = mock[Server]
+    val pluginConfig = new PluginConfiguration(settings, server)
     val projectIssues = mock[ProjectIssues]
     val bitbucketClient = mock[BitbucketClient]
     val issuesOnChangedLinesFilter = mock[IssuesOnChangedLinesFilter]

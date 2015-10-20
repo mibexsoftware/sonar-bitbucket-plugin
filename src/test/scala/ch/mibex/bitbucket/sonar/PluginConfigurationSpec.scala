@@ -2,7 +2,9 @@ package ch.mibex.bitbucket.sonar
 
 import org.junit.runner.RunWith
 import org.sonar.api.config.{PropertyDefinitions, Settings}
+import org.sonar.api.platform.Server
 import org.sonar.api.rule.Severity
+import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 
@@ -10,11 +12,12 @@ import org.specs2.specification.Scope
 
 
 @RunWith(classOf[JUnitRunner])
-class PluginConfigurationSpec extends Specification {
+class PluginConfigurationSpec extends Specification with Mockito {
 
   class SettingsContext extends Scope {
     val settings = new Settings(new PropertyDefinitions(classOf[SonarBitbucketPlugin]))
-    val pluginConfig = new PluginConfiguration(settings)
+    val server = mock[Server]
+    val pluginConfig = new PluginConfiguration(settings, server)
   }
 
   "sonar settings" should {
