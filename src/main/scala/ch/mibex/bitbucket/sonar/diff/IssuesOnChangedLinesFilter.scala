@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
 import org.sonar.api.issue.Issue
-import scala.collection.JavaConverters._
 
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
@@ -29,11 +28,11 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
               (diff.isNewFile || isOnChangedLine(lineNr, diff))
           val res = diffs.exists(isIssueOnChangedLines)
           if (!res) {
-            logger.warn(LogUtils.f(s"Ignore issue 1: {}"), i.comments().asScala.mkString(","))
+            logger.warn(LogUtils.f(s"Ignore issue 1: {}"), i.message)
           }
           res
         case None =>
-          logger.warn(LogUtils.f(s"Ignore issue 2: {}"), i.comments().asScala.mkString(","))
+          logger.warn(LogUtils.f(s"Ignore issue 2: {}"), i.message)
           false  // ignore these issues
       }
     }

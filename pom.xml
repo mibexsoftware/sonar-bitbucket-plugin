@@ -72,6 +72,11 @@
             <version>${sonar.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.sonar</groupId>
+            <artifactId>sonar-update-center-common</artifactId>
+            <version>1.12.1</version>
+        </dependency>
 
         <!-- Scala -->
         <dependency>

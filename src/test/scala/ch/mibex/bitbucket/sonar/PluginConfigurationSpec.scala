@@ -17,6 +17,7 @@ class PluginConfigurationSpec extends Specification with Mockito {
   class SettingsContext extends Scope {
     val settings = new Settings(new PropertyDefinitions(classOf[SonarBitbucketPlugin]))
     val server = mock[Server]
+    server.getVersion returns "4.5"
     val pluginConfig = new PluginConfiguration(settings, server)
   }
 
@@ -82,6 +83,12 @@ class PluginConfigurationSpec extends Specification with Mockito {
 
     "consider plug-in as being inactive when account is not set" in new SettingsContext {
       pluginConfig.validate() must beFalse
+    }
+
+    "not allow unsupported SonarQube version 5.1" in new SettingsContext {
+      server.getVersion returns "5.1"
+      val invalidPluginConfig = new PluginConfiguration(settings, server)
+      invalidPluginConfig.validate() must beFalse
     }
 
     "validate for team API based authentication" in new SettingsContext {
