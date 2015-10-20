@@ -36,8 +36,8 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
     val pullRequests = bitbucketClient.findPullRequestsWithSourceBranch(branchName)
     if (pullRequests.isEmpty) {
       logger.warn(LogUtils.f(
-        s"""No open pull requests found to analyze for branch $branchName.
-           |No Sonar analysis will be formed.""".stripMargin.replaceAll("\n", " ")))
+        s"""No open pull requests to analyze found for branch $branchName.
+           |No Sonar analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
     }
     pullRequests
   }

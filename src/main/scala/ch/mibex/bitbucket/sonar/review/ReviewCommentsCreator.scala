@@ -4,7 +4,8 @@ import ch.mibex.bitbucket.sonar.PluginConfiguration
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest, PullRequestComment}
 import ch.mibex.bitbucket.sonar.diff.IssuesOnChangedLinesFilter
-import ch.mibex.bitbucket.sonar.utils.SonarUtils
+import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
+import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
 import org.sonar.api.issue.ProjectIssues
@@ -19,6 +20,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
                             inputFileCache: InputFileCache,
                             pluginConfig: PluginConfiguration,
                             issuesOnChangedLinesFilter: IssuesOnChangedLinesFilter) extends BatchComponent {
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def createOrUpdateComments(pullRequest: PullRequest,
                              existingReviewComments: Seq[PullRequestComment],
@@ -69,7 +71,9 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def processIssues(pullRequest: PullRequest, reviewResults: PullRequestReviewResults) = {
     val newIssues = collectNewIssuesInProject()
+    logger.warn(LogUtils.f(s"Found ${newIssues.size} new issues"))
     val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, newIssues)
+    logger.warn(LogUtils.f(s"And ${issuesOnChangedLines.size} are on changed lines"))
     val commentsToBeAdded = new mutable.HashMap[String, mutable.Map[Int, mutable.StringBuilder]]()
 
     issuesOnChangedLines foreach { i =>
