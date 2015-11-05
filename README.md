@@ -50,7 +50,7 @@ mvn clean verify sonar:sonar --batch-mode --errors \
      -Dsonar.host.url=http://YOUR_SONAR_SERVER \
      -Dsonar.login=YOUR_SONAR_LOGIN \
      -Dsonar.password=YOUR_SONAR_PASSWORD \
-     -Dsonar.analysis.mode=incremental
+     -Dsonar.analysis.mode=issues
 ```
  
 See this table about the possible configuration options:
@@ -92,5 +92,5 @@ clean verify sonar:sonar --batch-mode --errors \
      -Dsonar.host.url=http://YOUR_SONAR_SERVER \
      -Dsonar.login=YOUR_SONAR_LOGIN \
      -Dsonar.password=YOUR_SONAR_PASSWORD \
-     -Dsonar.analysis.mode=incremental
+     -Dsonar.analysis.mode=issues
 ```
