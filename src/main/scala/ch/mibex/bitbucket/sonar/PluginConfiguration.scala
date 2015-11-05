@@ -7,13 +7,11 @@ import org.sonar.api.batch.InstantiationStrategy
 import org.sonar.api.config.Settings
 import org.sonar.api.platform.Server
 import org.sonar.api.rule.Severity
-import org.sonar.updatecenter.common.Version
 
 import scala.collection.JavaConverters._
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class PluginConfiguration(settings: Settings, server: Server) extends BatchComponent {
-  private val NotSupportedSonarVersion = Version.create("5.1")
   private val logger = LoggerFactory.getLogger(getClass)
 
   def isEnabled: Boolean =
@@ -59,7 +57,7 @@ class PluginConfiguration(settings: Settings, server: Server) extends BatchCompo
       logger.info(LogUtils.f("Plug-in considered disabled as Bitbucket account name is not configured."))
       return false
     }
-    if (Version.create(server.getVersion).equals(NotSupportedSonarVersion)) {
+    if (server.getVersion.equals("5.1")) {
       logger.error(LogUtils.f("SonarQube v5.1 is not supported because of issue SONAR-6398"))
       return false
     }
