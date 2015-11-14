@@ -62,25 +62,29 @@ See this table about the possible configuration options:
 | sonar.bitbucket.accountName                  | The Bitbucket account your repository belongs to (https://bitbucket.org/[account_name]/[repo_slug]).                                                                                                                           |                                                | mibexsoftware          |
 | sonar.bitbucket.teamName                     | If you want to create pull request comments for Sonar issues under your team account, provide the team name here.                                                                                                              |                                                | a_team                 |
 | sonar.bitbucket.apiKey                       | If you want to create pull request comments for Sonar issues under your team account, provide the API key for your team account here.                                                                                          |                                                |                        |
-| sonar.bitbucket.oauthClientKey               | If you want to create pull request comments for Sonar issues under your personal account provide the client key of the OAuth consumer created for this application here (needs Repository and pull request WRITE permissions). |                                                |                        |
-| sonar.bitbucket.oauthClientSecret            | If you want to create pull request comments for Sonar issues under your personal account, provide the OAuth client secret for this application here.                                                                           |                                                |                        |
+| sonar.bitbucket.oauthClientKey               | If you want to create pull request comments for Sonar issues under your personal account, provide the client key of the new OAuth consumer here (needs repository and pull request WRITE permissions).                         |                                                |                        |
+| sonar.bitbucket.oauthClientSecret            | If you want to create pull request comments for Sonar issues under your personal account, provide the OAuth client secret for the new OAuth consumer here.                                                                     |                                                |                        |
 | sonar.bitbucket.branchName                   | The branch name you want to get analyzed with SonarQube. When building with Jenkins, use $GIT_BRANCH. For Bamboo, you can use ${bamboo.repository.git.branch}.                                                                 |                                                | $GIT_BRANCH            |
 | sonar.bitbucket.branchIllegalCharReplacement | If you are using SonarQube version <= 4.5, then you have to escape '/' in your branch names with another character. Please provide this replacement character here.                                                            |                                                | _                      |
 | sonar.bitbucket.minSeverity                  | se either INFO, MINOR, MAJOR, CRITICAL or BLOCKER to only have pull request comments created for issues with severities greater or equal to this one.                                                                          | MAJOR                                          |                        |
 
 
-For authentication, you have to decide between if you want to create pull requests as your user by OAuth or as your
-team account with an API key. If you have a team account, we suggest to use this one as it is less confusing if the
-issues are created by this account opposed to when a personal account is taken. Unfortunately, Bitbucket does not 
-(yet) support technical users as GitHub does, so we have to use either a user or team account here.
+For authentication, you have to decide between if you want to create pull requests under your own user by using OAuth 
+or as your team account with an API key. If you have a team account, we suggest to use this one as it is less confusing
+if the Sonar issues are created by this account opposed to when a personal account is taken. Unfortunately, Bitbucket
+does not (yet) support technical users as GitHub does, so we have to use either a user or team account here.
 
-After the next commit, you should be able to see comments in your pull request on Bitbucket.
+If you go with OAuth, you have to configure a callback URL and use the Bitbucket permission "Repository write" and 
+"Pull requests write" for the new OAuth consumer.
+ 
+If everything is configured as explained, you should see pull request comments for all found Sonar issues in your pull
+request after the next push to your Bitbucket repository.
 
 
 ### Configuration for Bamboo with Maven
 
-You need to run this plug-in as part of your build. Add a build task of type `Maven 3.x` to your Bamboo job with
-the following goal:
+You need to run this SonarQube plug-in as part of your build. To achieve this, add a build task of type `Maven 3.x` to
+your Bamboo job with the following task goal:
  
 ```
 clean verify sonar:sonar --batch-mode --errors \

@@ -3,10 +3,11 @@ package ch.mibex.bitbucket.sonar.client
 import javax.ws.rs.core.{HttpHeaders, MediaType}
 
 import ch.mibex.bitbucket.sonar.PluginConfiguration
-import ch.mibex.bitbucket.sonar.utils.JsonUtils
+import ch.mibex.bitbucket.sonar.utils.{LogUtils, JsonUtils}
 import com.sun.jersey.api.client.filter.{ClientFilter, HTTPBasicAuthFilter}
 import com.sun.jersey.api.client.{Client, ClientRequest, ClientResponse}
 import com.sun.jersey.core.util.MultivaluedMapImpl
+import org.slf4j.LoggerFactory
 
 
 // either use the API key from the team like this:
@@ -58,6 +59,7 @@ class AuthenticationBinder {
 }
 
 class ClientAuthentication(config: PluginConfiguration) {
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def configure(client: Client): Unit = {
     if (isUserOauth) {
@@ -69,7 +71,9 @@ class ClientAuthentication(config: PluginConfiguration) {
       val auth = new AuthenticationBinder with TeamApiKeyAuthentication
       auth.bind(client, config)
     } else if (config.isEnabled) {
-      throw new IllegalStateException("Either team-based API or an OAuth user authentication has to be given")
+      throw new IllegalStateException(
+        "[sonar4bitbucket] Either team-based API or an OAuth user must be given"
+      )
     }
   }
 
@@ -91,7 +95,9 @@ class ClientAuthentication(config: PluginConfiguration) {
       val authDetails = response.getEntity(classOf[String])
       JsonUtils.mapFromJson(authDetails).get("access_token") match {
         case Some(access_token: String) => access_token
-        case _ => throw new IllegalStateException("No access token found")
+        case _ => throw new IllegalStateException(
+          "[sonar4bitbucket] No access token found. Have you defined a callback URL?"
+        )
       }
     } finally {
       client.removeFilter(oauthFilter)
