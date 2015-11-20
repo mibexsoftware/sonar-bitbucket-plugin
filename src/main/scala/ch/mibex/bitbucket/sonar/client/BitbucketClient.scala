@@ -73,12 +73,12 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
 
   def findOwnPullRequestComments(pullRequest: PullRequest): Seq[PullRequestComment] = {
 
-    def isFromUs(comment: Map[String, Any]) = {
+    def isFromUs(comment: Map[String, Any]): Boolean = {
       val userName = Option(config.teamName()) match {
         case Some(_) => config.teamName()
         case None => config.accountName()
       }
-      comment("user").asInstanceOf[Map[String, Any]]("username").asInstanceOf[String].equals(userName)
+      comment("user").asInstanceOf[Map[String, Any]]("username").asInstanceOf[String] equals userName
     }
 
     def fetchCommentsPage(start: Int): (Option[Int], Seq[PullRequestComment]) =
