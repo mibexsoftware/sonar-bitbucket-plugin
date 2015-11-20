@@ -101,9 +101,9 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def debugLogIssueStatistics(newIssues: Seq[Issue], issuesOnChangedLines: Seq[Issue]) {
     if (logger.isDebugEnabled) {
-      logger.debug(LogUtils.f(s"\n\nFound ${newIssues.size} new issues:"))
+      logger.debug(LogUtils.f(s"Found ${newIssues.size} new issues:"))
       newIssues foreach { i => logger.debug(LogUtils.f(s"  - $i")) }
-      logger.debug(LogUtils.f(s"\n\nAnd ${issuesOnChangedLines.size} of these are on changed or new lines:"))
+      logger.debug(LogUtils.f(s"And ${issuesOnChangedLines.size} of these are on changed or new lines:"))
       issuesOnChangedLines foreach { i => logger.debug(LogUtils.f(s"  + $i")) }
     }
   }

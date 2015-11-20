@@ -32,7 +32,7 @@ If you want, you can also build the plug-in manually like follows:
 mvn clean install
 ```
 
-After having copied the plugin's JAR in `{SONARQUBE_INSTALL_DIRECTORY}/extensions/plugins`, you need to restart your
+After you copied the plugin's JAR to `{SONARQUBE_INSTALL_DIRECTORY}/extensions/plugins`, you need to restart your
 SonarQube instance.
 
 ### Troubleshooting
