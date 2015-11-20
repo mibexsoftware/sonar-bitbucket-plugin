@@ -13,7 +13,8 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 
 
-object SonarBitbucketPlugin {
+object SonarBBPlugin {
+  final val PluginLogPrefix = "[sonar4bitbucket]"
   final val BitbucketAccountName = "sonar.bitbucket.accountName"
   final val BitbucketRepoSlug = "sonar.bitbucket.repoSlug"
   final val BitbucketTeamName = "sonar.bitbucket.teamName"
@@ -30,27 +31,27 @@ object SonarBitbucketPlugin {
   // global = false: do not show these settings in the config page of SonarQube
   Array(
     new Property(
-      key = SonarBitbucketPlugin.BitbucketAccountName,
+      key = SonarBBPlugin.BitbucketAccountName,
       name = "Bitbucket account name",
       description = "The Bitbucket account your repository belongs to " +
         "(https://bitbucket.org/[account_name]/[repo_slug]).",
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.BitbucketRepoSlug,
+      key = SonarBBPlugin.BitbucketRepoSlug,
       name = "Bitbucket repo slug",
       description = "The slug of your Bitbucket repository (https://bitbucket.org/[account_name]/[repo_slug]).",
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.BitbucketTeamName,
-      name = "Bitbucket team name",
+      key = SonarBBPlugin.BitbucketTeamName,
+      name = "Bitbucket team ID",
       description = "If you want to create pull request comments for Sonar issues under your team account, " +
-        "provide the team name here.",
+        "provide the team ID here.",
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.BitbucketApiKey,
+      key = SonarBBPlugin.BitbucketApiKey,
       name = "Bitbucket API key",
       description = "If you want to create pull request comments for Sonar issues under your team account, " +
         "provide the API key for your team account here.",
@@ -58,7 +59,7 @@ object SonarBitbucketPlugin {
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.BitbucketOAuthClientKey,
+      key = SonarBBPlugin.BitbucketOAuthClientKey,
       name = "Bitbucket OAuth client key",
       description = "If you want to create pull request comments for Sonar issues under your personal account " +
         "provide the client key of the OAuth consumer created for this application here (needs repository and " +
@@ -67,7 +68,7 @@ object SonarBitbucketPlugin {
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.BitbucketOAuthClientSecret,
+      key = SonarBBPlugin.BitbucketOAuthClientSecret,
       name = "Bitbucket OAuth client secret",
       description = "If you want to create pull request comments for Sonar issues under your personal account, " +
         "provide the OAuth client secret for this application here.",
@@ -75,21 +76,21 @@ object SonarBitbucketPlugin {
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.BitbucketBranchName,
+      key = SonarBBPlugin.BitbucketBranchName,
       name = "Bitbucket branch name",
       description = "The branch name you want to get analyzed with SonarQube. When building with Jenkins, " +
         "use $GIT_BRANCH. For Bamboo, you can use ${bamboo.repository.git.branch}.",
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.SonarQubeIllegalBranchCharReplacement,
+      key = SonarBBPlugin.SonarQubeIllegalBranchCharReplacement,
       name = "SonarQube invalid branch character replacement",
       description = "If you are using SonarQube version <= 4.5, then you have to escape '/' in your branch names " +
         "with another character. Please provide this replacement character here.",
       global = false
     ),
     new Property(
-      key = SonarBitbucketPlugin.SonarQubeMinSeverity,
+      key = SonarBBPlugin.SonarQubeMinSeverity,
       name = "Min. severity to create pull request comments",
       defaultValue = Severity.MAJOR, // we cannot use default Sonar#defaultSeverity here as this is not a constant value
       description = "Use either INFO, MINOR, MAJOR, CRITICAL or BLOCKER to only have pull request comments " +
@@ -98,12 +99,12 @@ object SonarBitbucketPlugin {
     )
   )
 )
-class SonarBitbucketPlugin extends SonarPlugin {
+class SonarBBPlugin extends SonarPlugin {
 
   override def getExtensions: JList[Object] = {
     ListBuffer(
       classOf[SonarReviewPostJob],
-      classOf[PluginConfiguration],
+      classOf[SonarBBPluginConfig],
       classOf[PullRequestProjectBuilder],
       classOf[BitbucketClient],
       classOf[InputFileCacheSensor],

@@ -11,35 +11,35 @@ import org.sonar.api.rule.Severity
 import scala.collection.JavaConverters._
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-class PluginConfiguration(settings: Settings, server: Server) extends BatchComponent {
+class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchComponent {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def isEnabled: Boolean =
-    settings.hasKey(SonarBitbucketPlugin.BitbucketAccountName)
+    settings.hasKey(SonarBBPlugin.BitbucketAccountName)
 
   def accountName(): String =
-    settings.getString(SonarBitbucketPlugin.BitbucketAccountName)
+    settings.getString(SonarBBPlugin.BitbucketAccountName)
 
   def repoSlug(): String =
-    settings.getString(SonarBitbucketPlugin.BitbucketRepoSlug)    
+    settings.getString(SonarBBPlugin.BitbucketRepoSlug)
 
   def teamName(): String =
-    settings.getString(SonarBitbucketPlugin.BitbucketTeamName)
+    settings.getString(SonarBBPlugin.BitbucketTeamName)
 
   def oauthTokenClientKey(): String =
-    settings.getString(SonarBitbucketPlugin.BitbucketOAuthClientKey)
+    settings.getString(SonarBBPlugin.BitbucketOAuthClientKey)
 
   def oauthTokenClientSecret(): String =
-    settings.getString(SonarBitbucketPlugin.BitbucketOAuthClientSecret)
+    settings.getString(SonarBBPlugin.BitbucketOAuthClientSecret)
 
   def apiKey(): String =
-    settings.getString(SonarBitbucketPlugin.BitbucketApiKey)
+    settings.getString(SonarBBPlugin.BitbucketApiKey)
 
   def minSeverity(): String =
-    settings.getString(SonarBitbucketPlugin.SonarQubeMinSeverity)
+    settings.getString(SonarBBPlugin.SonarQubeMinSeverity)
 
   def branchName(): String = {
-    var branchName = settings.getString(SonarBitbucketPlugin.BitbucketBranchName)
+    var branchName = settings.getString(SonarBBPlugin.BitbucketBranchName)
     Option(branchName) foreach { _ =>
       branchName = branchName.replaceFirst("^origin/", "") // Jenkins GIT_BRANCH variable contains a origin/ prefix
       if (branchIllegalCharReplacement().nonEmpty) {
@@ -50,7 +50,7 @@ class PluginConfiguration(settings: Settings, server: Server) extends BatchCompo
   }
 
   private def branchIllegalCharReplacement() = // we cannot use "" as defaultValue with SonarQube settings
-    Option(settings.getString(SonarBitbucketPlugin.SonarQubeIllegalBranchCharReplacement)).getOrElse("")
+    Option(settings.getString(SonarBBPlugin.SonarQubeIllegalBranchCharReplacement)).getOrElse("")
 
   def validate(): Boolean = {
     if (!isEnabled) {
@@ -62,16 +62,17 @@ class PluginConfiguration(settings: Settings, server: Server) extends BatchCompo
       return false
     }
     require(isIllegalCharReplacementValid,
-      s"Only the following characters are allowed as replacement: ${SonarUtils.LegalBranchNameReplacementChars}"
+      s"""${SonarBBPlugin.PluginLogPrefix} Only the following characters
+         |are allowed as replacement: ${SonarUtils.LegalBranchNameReplacementChars}""".stripMargin.replaceAll("\n", " ")
     )
-    require(Option(repoSlug()).nonEmpty, "A repository slug must be set")
-    require(Option(branchName()).nonEmpty, "The branch to analyze must be given")
+    require(Option(repoSlug()).nonEmpty, s"${SonarBBPlugin.PluginLogPrefix} A repository slug must be set")
+    require(Option(branchName()).nonEmpty, s"${SonarBBPlugin.PluginLogPrefix} The branch to analyze must be given")
     require(isValidAuthenticationGiven,
-      """Either the name and API key for the Bitbucket team account
+      s"""${SonarBBPlugin.PluginLogPrefix} Either the name and API key for the Bitbucket team account
         |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
     )
     Option(minSeverity()) foreach { severity =>
-      require(Severity.ALL.asScala.contains(severity), s"Invalid SonarQube severity level $severity")
+      require(Severity.ALL.asScala.contains(severity), s"${SonarBBPlugin.PluginLogPrefix} Invalid severity $severity")
     }
     true
   }

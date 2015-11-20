@@ -43,7 +43,7 @@
         <sonar.version>4.5.4</sonar.version>
         <sonar.pluginKey>sonarbitbucket</sonar.pluginKey>
         <sonar.pluginName>Bitbucket for Sonar</sonar.pluginName>
-        <sonar.pluginClass>ch.mibex.bitbucket.sonar.SonarBitbucketPlugin</sonar.pluginClass>
+        <sonar.pluginClass>ch.mibex.bitbucket.sonar.SonarBBPlugin</sonar.pluginClass>
         <scala.version>2.11</scala.version>
         <scala.full.version>2.11.6</scala.full.version>
         <!--
@@ -142,7 +142,7 @@
                 <version>1.7</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <pluginClass>ch.mibex.bitbucket.sonar.SonarBitbucketPlugin</pluginClass>
+                    <pluginClass>ch.mibex.bitbucket.sonar.SonarBBPlugin</pluginClass>
                 </configuration>
             </plugin>
             <plugin>

@@ -1,13 +1,13 @@
 package ch.mibex.bitbucket.sonar.cache
 
-import ch.mibex.bitbucket.sonar.PluginConfiguration
+import ch.mibex.bitbucket.sonar.SonarBBPluginConfig
 import org.sonar.api.batch.fs.FileSystem
 import org.sonar.api.batch.{Sensor, SensorContext}
 import org.sonar.api.resources.Project
 
 import scala.collection.JavaConverters._
 
-class InputFileCacheSensor(pluginConfig: PluginConfiguration,
+class InputFileCacheSensor(pluginConfig: SonarBBPluginConfig,
                            fileSystem: FileSystem,
                            inputFileCache: InputFileCache) extends Sensor {
   

@@ -1,0 +1,173 @@
+package ch.mibex.bitbucket.sonar
+
+import org.junit.runner.RunWith
+import org.sonar.api.config.{PropertyDefinitions, Settings}
+import org.sonar.api.platform.Server
+import org.sonar.api.rule.Severity
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
+import org.specs2.runner.JUnitRunner
+
+import org.specs2.specification.Scope
+
+
+@RunWith(classOf[JUnitRunner])
+class SonarBBPluginConfigSpec extends Specification with Mockito {
+
+  class SettingsContext extends Scope {
+    val settings = new Settings(new PropertyDefinitions(classOf[SonarBBPlugin]))
+    val server = mock[Server]
+    server.getVersion returns "4.5"
+    val pluginConfig = new SonarBBPluginConfig(settings, server)
+  }
+
+  "sonar settings" should {
+
+    "respect default value for Sonar min severity" in new SettingsContext {
+      settings.getString(SonarBBPlugin.SonarQubeMinSeverity) must_== Severity.defaultSeverity()
+    }
+
+  }
+
+  "plug-in config" should {
+
+    "yield configured account name" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      pluginConfig.accountName() must_== "mibexsoftware"
+    }
+
+    "yield configured repository slug" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "test")
+      pluginConfig.repoSlug() must_== "test"
+    }
+
+    "yield configured team name" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
+      pluginConfig.teamName() must_== "a_team"
+    }
+
+    "yield configured api key" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketApiKey, "1234567890")
+      pluginConfig.apiKey() must_== "1234567890"
+    }
+
+    "yield configured branch name" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      pluginConfig.branchName() must_== "feature/XYZ"
+    }
+
+    "yield configured branch name with origin prefix cropped" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "origin/feature/XYZ")
+      pluginConfig.branchName() must_== "feature/XYZ"
+    }
+
+    "yield configured branch name with replacement character replaced" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      settings.setProperty(SonarBBPlugin.SonarQubeIllegalBranchCharReplacement, "_")
+      pluginConfig.branchName() must_== "feature_XYZ"
+    }
+
+    "yield configured OAuth client key" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asdfagdfsahdshd")
+      pluginConfig.oauthTokenClientKey() must_== "asdfagdfsahdshd"
+    }
+
+    "yield configured OAuth client secret" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxxxx")
+      pluginConfig.oauthTokenClientSecret() must_== "xxxxxxxxx"
+    }
+
+  }
+
+  "plug-in configuration validation" should {
+
+    "consider plug-in as being inactive when account is not set" in new SettingsContext {
+      pluginConfig.validate() must beFalse
+    }
+
+    "not allow unsupported SonarQube version 5.1" in new SettingsContext {
+      server.getVersion returns "5.1"
+      val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
+      invalidPluginConfig.validate() must beFalse
+    }
+
+    "validate for team API based authentication" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketApiKey, "xxxxxxxxx")
+      settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      pluginConfig.validate() must beTrue
+    }
+
+    "validate for user OAuth based authentication" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
+      pluginConfig.validate() must beTrue
+    }
+
+    "not accept wrong severity level" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
+      settings.setProperty(SonarBBPlugin.SonarQubeMinSeverity, "UNKNOWN")
+      pluginConfig.validate() must throwA(
+        new IllegalArgumentException("requirement failed: [sonar4bitbucket] Invalid severity UNKNOWN")
+      )
+    }
+
+    "not accept when no authentication method is configured" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      pluginConfig.validate() must throwA(
+        new IllegalArgumentException(
+          """requirement failed: [sonar4bitbucket] Either the name and API key for the Bitbucket team account
+            |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
+        )
+      )
+    }
+
+    "not accept when invalid SonarQube branch replacement key is given" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
+      settings.setProperty(SonarBBPlugin.SonarQubeIllegalBranchCharReplacement, "/")
+      pluginConfig.validate() must throwA(
+        new IllegalArgumentException(
+          """requirement failed: [sonar4bitbucket] Only the following characters
+            |are allowed as replacement: [0-9a-zA-Z:\-_.]*""".stripMargin.replaceAll("\n", " ")
+        )
+      )
+    }
+
+    "not accept when no branch name is given" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
+      pluginConfig.validate() must throwA(
+        new IllegalArgumentException("requirement failed: [sonar4bitbucket] The branch to analyze must be given")
+      )
+    }
+
+    "not accept when no repository slug is given" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
+      pluginConfig.validate() must throwA(
+        new IllegalArgumentException("requirement failed: [sonar4bitbucket] A repository slug must be set")
+      )
+    }
+
+  }
+
+}

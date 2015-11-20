@@ -2,7 +2,7 @@ package ch.mibex.bitbucket.sonar.client
 
 import javax.ws.rs.core.MediaType
 
-import ch.mibex.bitbucket.sonar.PluginConfiguration
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.utils.{LogUtils, JsonUtils}
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
@@ -21,7 +21,7 @@ case class PullRequestComment(commentId: Int, content: String, line: Option[Int]
 }
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-class BitbucketClient(config: PluginConfiguration) extends BatchComponent {
+class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
   private val logger = LoggerFactory.getLogger(getClass)
   private val client = createJerseyClient()
   private val v1Api = createResource("1.0")
@@ -121,7 +121,7 @@ class BitbucketClient(config: PluginConfiguration) extends BatchComponent {
           .queryParam("context", "0") // as we are not interested in context lines here
           .get(classOf[String])
       case _ =>
-        throw new IllegalArgumentException("Unexpected response " + response.getStatus)
+        throw new IllegalArgumentException(s"${SonarBBPlugin.PluginLogPrefix} PR diff response: " + response.getStatus)
     }
   }
 
