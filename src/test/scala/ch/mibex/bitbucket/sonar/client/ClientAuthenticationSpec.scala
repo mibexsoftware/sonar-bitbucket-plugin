@@ -2,7 +2,7 @@ package ch.mibex.bitbucket.sonar.client
 
 import javax.ws.rs.core.{MediaType, MultivaluedMap}
 
-import ch.mibex.bitbucket.sonar.{PluginConfiguration, SonarBitbucketPlugin}
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, WebResource}
 import com.sun.jersey.core.util.MultivaluedMapImpl
@@ -10,8 +10,6 @@ import org.junit.runner.RunWith
 import org.mockito
 import org.sonar.api.platform.Server
 
-//import org.mockito.Answers.RETURNS_DEEP_STUBS
-//import org.mockito.Mockito.withSettings
 import org.sonar.api.config.{PropertyDefinitions, Settings}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -24,9 +22,9 @@ import org.specs2.specification.Scope
 class ClientAuthenticationSpec extends Specification with Mockito {
 
   class AuthContext extends Scope {
-    val settings = new Settings(new PropertyDefinitions(classOf[SonarBitbucketPlugin]))
+    val settings = new Settings(new PropertyDefinitions(classOf[SonarBBPlugin]))
     val server = mock[Server]
-    val pluginConfig = new PluginConfiguration(settings, server)
+    val pluginConfig = new SonarBBPluginConfig(settings, server)
     val authentication = new ClientAuthentication(pluginConfig)
     val client = mock[Client] //(withSettings.defaultAnswer(RETURNS_DEEP_STUBS.get))
   }
@@ -34,15 +32,15 @@ class ClientAuthenticationSpec extends Specification with Mockito {
   "bind authentication to Jersey client" should {
 
     "use a basic auth filter for team API key" in new AuthContext {
-      settings.setProperty(SonarBitbucketPlugin.BitbucketApiKey, "xxxxxxxxx")
-      settings.setProperty(SonarBitbucketPlugin.BitbucketTeamName, "a_team")
+      settings.setProperty(SonarBBPlugin.BitbucketApiKey, "xxxxxxxxx")
+      settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
       authentication.configure(client)
       there was one(client).addFilter(any[HTTPBasicAuthFilter])
     }
 
     "use client filter for OAuth communication" in new AuthContext {
-      settings.setProperty(SonarBitbucketPlugin.BitbucketOAuthClientKey, "xxxxxxxxx")
-      settings.setProperty(SonarBitbucketPlugin.BitbucketOAuthClientSecret, "a_team")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "xxxxxxxxx")
+      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "a_team")
 
       // unfortunately, we cannot use Mockito's deep mocks here as they seam to be broken when using Jersey and
       // its generic POST method; so we hand-mock everything here...
@@ -69,7 +67,7 @@ class ClientAuthenticationSpec extends Specification with Mockito {
     }
 
     "abort if no valid authentication is configured and plug-in is enabled" in new AuthContext {
-      settings.setProperty(SonarBitbucketPlugin.BitbucketAccountName, "xxxxxxxxx")
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "xxxxxxxxx")
       authentication.configure(client) must throwA[IllegalStateException]
     }
 

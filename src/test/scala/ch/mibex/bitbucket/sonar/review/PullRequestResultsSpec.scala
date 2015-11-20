@@ -1,6 +1,6 @@
 package ch.mibex.bitbucket.sonar.review
 
-import ch.mibex.bitbucket.sonar.{PluginConfiguration, SonarBitbucketPlugin}
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig, SonarBBPlugin$}
 import org.junit.runner.RunWith
 import org.sonar.api.config.{PropertyDefinitions, Settings}
 import org.sonar.api.issue.Issue
@@ -10,21 +10,24 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import org.specs2.specification.Scope
-
+import org.mockito.Answers.RETURNS_DEEP_STUBS
 @RunWith(classOf[JUnitRunner])
 class PullRequestResultsSpec extends Specification with Mockito {
 
   class SettingsContext extends Scope {
-    val settings = new Settings(new PropertyDefinitions(classOf[SonarBitbucketPlugin]))
+    val settings = new Settings(new PropertyDefinitions(classOf[SonarBBPlugin]))
     val server = mock[Server]
-    val pluginConfig = new PluginConfiguration(settings, server)
+    val pluginConfig = new SonarBBPluginConfig(settings, server)
   }
 
   "formatAsMarkdown and canBeApproved" should {
 
     "yield congrats and approval if no issues are found" in new SettingsContext {
       val results = new PullRequestReviewResults(pluginConfig)
-      results.formatAsMarkdown() must_== "**SonarQube Analysis** reported no issues. Take a chocolate :-)"
+      results.formatAsMarkdown() must_==
+        """**SonarQube Analysis** reported no issues. Take a chocolate :-)
+          |
+          |Note that only issues with severity >= ![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) (major) are reported.""".stripMargin
       results.canBeApproved must beTrue
     }
 
@@ -59,7 +62,7 @@ class PullRequestResultsSpec extends Specification with Mockito {
           |
           |Watch the comments in this pull request to review them. Note that only issues with severity >=
           |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) (major)
-          |are shown in this pull request.""".stripMargin).ignoreSpace
+          |are reported.""".stripMargin).ignoreSpace
       results.canBeApproved must beFalse
     }
 

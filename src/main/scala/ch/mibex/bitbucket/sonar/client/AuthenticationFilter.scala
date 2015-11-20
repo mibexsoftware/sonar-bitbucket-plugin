@@ -2,7 +2,7 @@ package ch.mibex.bitbucket.sonar.client
 
 import javax.ws.rs.core.{HttpHeaders, MediaType}
 
-import ch.mibex.bitbucket.sonar.PluginConfiguration
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.utils.{LogUtils, JsonUtils}
 import com.sun.jersey.api.client.filter.{ClientFilter, HTTPBasicAuthFilter}
 import com.sun.jersey.api.client.{Client, ClientRequest, ClientResponse}
@@ -21,13 +21,13 @@ import org.slf4j.LoggerFactory
 // curl -v -X POST --data "content=test comment" -H "Authorization: Bearer oauth_token" https://bitbucket.org/api/1.0/repositories/accountName/repoSlug/pullrequests/1/comments
 trait BitbucketAuthentication {
 
-  def createAuthFilter(pluginConfig: PluginConfiguration): ClientFilter
+  def createAuthFilter(pluginConfig: SonarBBPluginConfig): ClientFilter
 
 }
 
 trait TeamApiKeyAuthentication extends BitbucketAuthentication {
 
-  override def createAuthFilter(pluginConfig: PluginConfiguration): ClientFilter =
+  override def createAuthFilter(pluginConfig: SonarBBPluginConfig): ClientFilter =
     new HTTPBasicAuthFilter(pluginConfig.teamName(), pluginConfig.apiKey())
 
 }
@@ -35,7 +35,7 @@ trait TeamApiKeyAuthentication extends BitbucketAuthentication {
 trait UserOauthAuthentication extends BitbucketAuthentication {
   var oauthAccessToken: String = _
 
-  override def createAuthFilter(pluginConfig: PluginConfiguration): ClientFilter = {
+  override def createAuthFilter(pluginConfig: SonarBBPluginConfig): ClientFilter = {
     new ClientFilter() {
       override def handle(request: ClientRequest): ClientResponse = {
         import scala.collection.JavaConversions._
@@ -51,14 +51,14 @@ trait UserOauthAuthentication extends BitbucketAuthentication {
 class AuthenticationBinder {
   self: BitbucketAuthentication =>
 
-  def bind(client: Client, pluginConfiguration: PluginConfiguration): Unit = {
+  def bind(client: Client, pluginConfiguration: SonarBBPluginConfig): Unit = {
     val filter = createAuthFilter(pluginConfiguration)
     client.addFilter(filter)
   }
 
 }
 
-class ClientAuthentication(config: PluginConfiguration) {
+class ClientAuthentication(config: SonarBBPluginConfig) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def configure(client: Client): Unit = {
@@ -72,7 +72,7 @@ class ClientAuthentication(config: PluginConfiguration) {
       auth.bind(client, config)
     } else if (config.isEnabled) {
       throw new IllegalStateException(
-        "[sonar4bitbucket] Either team-based API or an OAuth user must be given"
+        s"${SonarBBPlugin.PluginLogPrefix} Either team-based API or an OAuth user must be given"
       )
     }
   }
@@ -95,9 +95,13 @@ class ClientAuthentication(config: PluginConfiguration) {
       val authDetails = response.getEntity(classOf[String])
       JsonUtils.mapFromJson(authDetails).get("access_token") match {
         case Some(access_token: String) => access_token
-        case _ => throw new IllegalStateException(
-          "[sonar4bitbucket] No access token found. Have you defined a callback URL?"
-        )
+        case _ =>
+          val errorDescription = JsonUtils.mapFromJson(authDetails).getOrElse("error_description", "Unknown error")
+          throw new IllegalStateException(
+            s"""${SonarBBPlugin.PluginLogPrefix} Could not create an OAuth access token:
+                |$errorDescription
+                |Have you defined a callback URL in the Bitbucket OAuth configuration?""".stripMargin
+          )
       }
     } finally {
       client.removeFilter(oauthFilter)

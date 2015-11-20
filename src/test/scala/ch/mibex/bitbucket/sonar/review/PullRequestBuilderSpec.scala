@@ -32,7 +32,7 @@ class PullRequestBuilderSpec extends Specification with Mockito {
       settings.getString(CoreProperties.ANALYSIS_MODE) returns CoreProperties.ANALYSIS_MODE_ANALYSIS
       projectBuilder.build(projectContext) must throwA(
         new IllegalArgumentException(
-          """requirement failed: The plug-in only works in preview or issues mode.
+          """requirement failed: [sonar4bitbucket] The plug-in only works in preview or issues mode.
             |Please set "-Dsonar.analysis.mode" accordingly.""".stripMargin.replace("\n", " ")
         )
       )
@@ -42,7 +42,7 @@ class PullRequestBuilderSpec extends Specification with Mockito {
       settings.getString(CoreProperties.ANALYSIS_MODE) returns CoreProperties.ANALYSIS_MODE_SENSOR
       projectBuilder.build(projectContext) must throwA(
         new IllegalArgumentException(
-          """requirement failed: The plug-in only works in preview or issues mode.
+          """requirement failed: [sonar4bitbucket] The plug-in only works in preview or issues mode.
             |Please set "-Dsonar.analysis.mode" accordingly.""".stripMargin.replace("\n", " ")
         )
       )

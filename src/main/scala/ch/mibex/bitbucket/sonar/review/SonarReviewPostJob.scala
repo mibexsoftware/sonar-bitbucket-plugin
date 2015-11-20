@@ -1,6 +1,6 @@
 package ch.mibex.bitbucket.sonar.review
 
-import ch.mibex.bitbucket.sonar.PluginConfiguration
+import ch.mibex.bitbucket.sonar.SonarBBPluginConfig
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest, PullRequestComment}
 import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
 import org.slf4j.LoggerFactory
@@ -10,7 +10,7 @@ import org.sonar.api.resources.Project
 
 // due to https://jira.sonarsource.com/browse/SONAR-6398, a post job is not called on SonarQube 5.1.0!
 class SonarReviewPostJob(bitbucketClient: BitbucketClient,
-                         pluginConfig: PluginConfiguration,
+                         pluginConfig: SonarBBPluginConfig,
                          reviewCommentsUpdater: ReviewCommentsCreator) extends PostJob with CheckProject {
   private val logger = LoggerFactory.getLogger(getClass)
 
@@ -35,9 +35,9 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
     val branchName = pluginConfig.branchName()
     val pullRequests = bitbucketClient.findPullRequestsWithSourceBranch(branchName)
     if (pullRequests.isEmpty) {
-      logger.warn(LogUtils.f(
-        s"""No open pull requests to analyze found for branch $branchName.
-           |No Sonar analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
+      logger.info(LogUtils.f(
+        s"""No open pull requests with source branch '$branchName' found.
+           |No analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
     }
     pullRequests
   }

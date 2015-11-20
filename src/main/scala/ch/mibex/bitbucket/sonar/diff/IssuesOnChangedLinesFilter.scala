@@ -1,5 +1,6 @@
 package ch.mibex.bitbucket.sonar.diff
 
+import ch.mibex.bitbucket.sonar.SonarBBPlugin
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest}
 import ch.mibex.bitbucket.sonar.diff.GitDiffParser.GitDiff
@@ -14,7 +15,8 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
                                  inputFileCache: InputFileCache) extends BatchComponent {
 
   def filter(pullRequest: PullRequest, newIssues: Seq[Issue]): Seq[Issue] = {
-    val diffs = parsePullRequestDiff(pullRequest)
+    val pullRequestDiff = bitbucketClient.getPullRequestDiff(pullRequest)
+    val diffs = parseOrFail(pullRequestDiff)
     val issuesOnChangedLines = newIssues filter { i =>
       val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
 
@@ -38,12 +40,11 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
       && lineNr <= c.hunkHeader.fromToRange.toLineStart + c.hunkHeader.fromToRange.toNumLines
     )
 
-  private def parsePullRequestDiff(pullRequest: PullRequest) = {
-    val diff = bitbucketClient.getPullRequestDiff(pullRequest)
-    GitDiffParser.parse(diff) match {
-      case Left(parsingFailure) => throw new RuntimeException(s"Failed to parse git diff due to $parsingFailure")
-      case Right(gitDiffs) => gitDiffs
-    }
+  private def parseOrFail(diff: String) = GitDiffParser.parse(diff) match {
+    case Left(parsingFailure) =>
+      throw new RuntimeException(s"${SonarBBPlugin.PluginLogPrefix} Failed to parse git diff: ${parsingFailure.reason}")
+    case Right(gitDiffs) =>
+      gitDiffs
   }
 
 }

@@ -3,6 +3,7 @@ package ch.mibex.bitbucket.sonar.utils
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 
+import ch.mibex.bitbucket.sonar.SonarBBPlugin
 import org.sonar.api.issue.Issue
 import org.sonar.api.rule.{RuleKey, Severity}
 import scala.collection.JavaConverters._
@@ -18,8 +19,8 @@ object SonarUtils {
     val severities = Severity.ALL.asScala
     val issueSeverityIdx = severities.indexOf(issue.severity())
     val referenceSeverityIdx = severities.indexOf(referenceSeverity)
-    require(issueSeverityIdx >= 0, s"Unknown severity: ${issue.severity()}")
-    require(referenceSeverityIdx >= 0, s"Unknown severity: $referenceSeverityIdx")
+    require(issueSeverityIdx >= 0, s"${SonarBBPlugin.PluginLogPrefix} Unknown severity: ${issue.severity()}")
+    require(referenceSeverityIdx >= 0, s"${SonarBBPlugin.PluginLogPrefix} Unknown severity: $referenceSeverityIdx")
     issueSeverityIdx >= referenceSeverityIdx
   }
 
@@ -47,7 +48,7 @@ object SonarUtils {
       URLEncoder.encode(url, "UTF-8")
     } catch {
       case e: UnsupportedEncodingException =>
-        throw new IllegalStateException("Encoding not supported", e)
+        throw new IllegalStateException("[sonar4bitbucket] Encoding not supported", e)
     }
   }
 
