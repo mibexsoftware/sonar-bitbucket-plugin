@@ -35,6 +35,19 @@ mvn clean install
 After having copied the plugin's JAR in `{SONARQUBE_INSTALL_DIRECTORY}/extensions/plugins`, you need to restart your
 SonarQube instance.
 
+### Troubleshooting
+
+If you experience any issues with the plug-in, check the build log for any suspicious messages first. The plug-in writes 
+messages to the log with the prefix ```[sonar4bitbucket]```. Possible issues are often related to authentication. Please 
+make sure that you have configured a callback URL in Bitbucket when using OAuth. If authentication worked but you don't 
+see any pull request comments being made for code issues, run the build in debug mode, create a 
+[bug report](https://github.com/mibexsoftware/sonar-bitbucket-plugin/issues) and attach important debug log lines to it. 
+To generate a log with debug level, use the following parameters to trigger SonarQube:
+
+```
+mvn sonar:sonar -X -Dsonar.verbose=true ...
+```
+
 ### Configuration for Jenkins with Maven
 
 You need to run this plug-in as part of your build. Add a build step of type `Execute shell` to your Jenkins job with
@@ -60,7 +73,7 @@ See this table about the possible configuration options:
 |----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|------------------------|
 | sonar.bitbucket.repoSlug                     | The slug of your Bitbucket repository (https://bitbucket.org/[account_name]/[repo_slug]).                                                                                                                                      |                                                | sonar-bitbucket-plugin |
 | sonar.bitbucket.accountName                  | The Bitbucket account your repository belongs to (https://bitbucket.org/[account_name]/[repo_slug]).                                                                                                                           |                                                | mibexsoftware          |
-| sonar.bitbucket.teamName                     | If you want to create pull request comments for Sonar issues under your team account, provide the team name here.                                                                                                              |                                                | a_team                 |
+| sonar.bitbucket.teamName                     | If you want to create pull request comments for Sonar issues under your team account, provide the Bitbucket team ID (not the name) here.                                                                                                              |                                                | a_team                 |
 | sonar.bitbucket.apiKey                       | If you want to create pull request comments for Sonar issues under your team account, provide the API key for your team account here.                                                                                          |                                                |                        |
 | sonar.bitbucket.oauthClientKey               | If you want to create pull request comments for Sonar issues under your personal account, provide the client key of the new OAuth consumer here (needs repository and pull request WRITE permissions).                         |                                                |                        |
 | sonar.bitbucket.oauthClientSecret            | If you want to create pull request comments for Sonar issues under your personal account, provide the OAuth client secret for the new OAuth consumer here.                                                                     |                                                |                        |
@@ -90,11 +103,19 @@ your Bamboo job with the following task goal:
 clean verify sonar:sonar --batch-mode --errors \
      -Dsonar.bitbucket.repoSlug=YOUR_BITBUCKET_REPO_SLUG \
      -Dsonar.bitbucket.accountName=YOUR_BITBUCKET_ACCOUNT_NAME \
-     -Dsonar.bitbucket.teamName=YOUR_BITBUCKET_TEAM_NAME \
+     -Dsonar.bitbucket.teamName=YOUR_BITBUCKET_TEAM_ID \
      -Dsonar.bitbucket.apiKey=YOUR_BITBUCKET_API_KEY \
      -Dsonar.bitbucket.branchName=${bamboo.repository.git.branch} \
      -Dsonar.host.url=http://YOUR_SONAR_SERVER \
      -Dsonar.login=YOUR_SONAR_LOGIN \
      -Dsonar.password=YOUR_SONAR_PASSWORD \
      -Dsonar.analysis.mode=issues
+```
+
+### Configuration with SonarRunner
+
+The configuration of the SonarRunner parameters is actually the same as with Maven. Just run SonarRunner like follows:
+
+```
+sonar-runner -Dsonar.analysis.mode=issues <other-options>
 ```
