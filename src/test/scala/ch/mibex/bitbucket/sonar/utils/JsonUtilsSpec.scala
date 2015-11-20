@@ -1,10 +1,7 @@
 package ch.mibex.bitbucket.sonar.utils
 
 import org.junit.runner.RunWith
-import org.mockito.Mockito._
-import org.sonar.api.issue.Issue
 import org.sonar.api.rule.Severity
-import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import spray.json.SerializationException
