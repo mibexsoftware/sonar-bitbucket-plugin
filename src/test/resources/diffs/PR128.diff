@@ -1,0 +1,510 @@
+diff --git a/app/DataTransferObjects/DataTransferModel.php b/app/DataTransferObjects/DataTransferModel.php
+new file mode 100644
+index 0000000..5eb7f34
+--- /dev/null
++++ b/app/DataTransferObjects/DataTransferModel.php
+@@ -0,0 +1,31 @@
++<?php
++
++namespace App\DataTransferObjects;
++
++/**
++ * Class DataTransferModel
++ *
++ * @package App\DataTransferObjects
++ */
++class DataTransferModel
++{
++    public $column;
++    public $dtoClass;
++    public $scope;
++
++    /**
++     * DataTransferModel constructor.
++     *
++     * @param $column
++     * @param $dtoClass
++     * @param null $scope
++     */
++    public function __construct($column, $dtoClass, $scope = null)
++    {
++        $this->column = $column;
++        $this->dtoClass = $dtoClass;
++        if (!empty($scope)) {
++            $this->scope = 'scope'.$scope;
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/app/DataTransferObjects/DataTransferObjectTrait.php b/app/DataTransferObjects/DataTransferObjectTrait.php
+new file mode 100644
+index 0000000..2d879d0
+--- /dev/null
++++ b/app/DataTransferObjects/DataTransferObjectTrait.php
+@@ -0,0 +1,193 @@
++<?php
++
++namespace App\DataTransferObjects;
++
++use Carbon\Carbon;
++use Illuminate\Support\Collection;
++
++/**
++ * Class DataTransferObjectTrait
++ *
++ * @package App\DataTransferObjects
++ */
++trait DataTransferObjectTrait
++{
++    private $data;
++
++    /**
++     * Gets the model that the DTO model specifies
++     *
++     * @return mixed
++     *
++     * @throws \Exception
++     */
++    public function getModel()
++    {
++        $model = new $this->model();
++
++        foreach ($this->getMappings() as $key => $newKey) {
++            $data = $this->data->$key;
++            if (!is_array($data)) {
++                if (is_object($data)) {
++                    if (isset($data->date)) {
++                        $data = Carbon::parse($data->date, $data->timezone)->format($model::getDateFormat());
++                    } else {
++                        throw new \Exception('Cannot translate object '.$data);
++                    }
++                } else {
++                    $model->$newKey = $data;
++                }
++            }
++        }
++
++        return $model;
++    }
++
++    /**
++     * Gets the mappings for the current DTO object
++     *
++     * @return mixed
++     */
++    public function getMappings()
++    {
++        if (empty($this->mappings)) {
++            $this->mappings = $this->getColumns();
++        }
++
++        return $this->mappings;
++    }
++
++    /**
++     * Gets the columns from the database
++     *
++     * @return array
++     *
++     * @throws \Exception
++     */
++    private function getColumns()
++    {
++        $model = new $this->model();
++
++        $table = $model->getConnection()->getTablePrefix().$model->getTable();
++        $schema = $model->getConnection()->getDoctrineSchemaManager($table);
++        $databasePlatform = $schema->getDatabasePlatform();
++        $databasePlatform->registerDoctrineTypeMapping('enum', 'string');
++
++        $database = null;
++        if (strpos($table, '.')) {
++            list($database, $table) = explode('.', $table);
++        }
++
++        $tableColumns = $schema->listTableColumns($table, $database);
++
++        if ($tableColumns) {
++            $columns = [];
++            foreach ($tableColumns as $name => $column) {
++                $columns[$column->getName()] = $column->getName();
++            }
++
++            return $columns;
++        } else {
++            throw new \Exception('You must specify a mapping for this model');
++        }
++    }
++
++    /**
++     * Maps the data back and forth between a mapping
++     *
++     * @return $this
++     */
++    private function map()
++    {
++        $this->removePublicProperties();
++
++        if ($this->data instanceof $this->model) {
++            $this->convertFromModel();
++        } else {
++            $this->convertFromArray();
++        }
++
++        return $this;
++    }
++
++    /**
++     * Resets all the public properties so we can send the correct mappings back if scoped
++     */
++    private function removePublicProperties()
++    {
++        foreach ((new \ReflectionObject($this))->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
++            $property = $property->getName();
++            unset($this->$property);
++        }
++    }
++
++    /**
++     * Converts data from a model to DTO objects
++     */
++    private function convertFromModel()
++    {
++        foreach ($this->getMappings() as $newKey => $key) {
++            if ($key instanceof DataTransferModel) {
++                $column = $key->column;
++                $data = $this->data->$column;
++
++                if ($data instanceof Collection) {
++                    $this->$newKey = [];
++                    foreach ($data as $datum) {
++                        array_push($this->$newKey, $this->generateDTOModel($key->dtoClass, $datum, $key->scope));
++                    }
++                } else {
++                    $this->$newKey = $this->generateDTOModel($key->dtoClass, $data, $key->scope);
++                }
++            } else {
++                $this->$newKey = $this->data->$key;
++            }
++        }
++    }
++
++    /**
++     * Generates a DTO model
++     *
++     * @param $dtoClass
++     * @param $data
++     * @param null $scope
++     *
++     * @return mixed
++     */
++    private function generateDTOModel($dtoClass, $data, $scope = null)
++    {
++        $dtoModel = (new $dtoClass($data));
++        if (!empty($scope)) {
++            $dtoModel->$scope();
++        }
++
++        return $dtoModel;
++    }
++
++    /**
++     * Converts the data from an array to DTO objects
++     */
++    private function convertFromArray()
++    {
++        foreach ($this->getMappings() as $newKey => $key) {
++
++            if ($key instanceof DataTransferModel) {
++                $column = $key->column;
++                $data = $this->data->$column;
++
++                if (is_array($data)) {
++                    $this->$newKey = [];
++                    foreach ($data as $datum) {
++                        array_push($this->$newKey, $this->generateDTOModel($key->dtoClass, $datum, $key->scope));
++                    }
++                } else {
++                    $this->$newKey = $this->generateDTOModel($key->dtoClass, $data, $key->scope);
++                }
++            } else {
++                if (isset($this->data->$newKey)) {
++                    $this->$newKey = $this->data->$newKey;
++                }
++            }
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/app/DataTransferObjects/Franchise/Restaurant/RestaurantDTO.php b/app/DataTransferObjects/Franchise/Restaurant/RestaurantDTO.php
+new file mode 100644
+index 0000000..b46557e
+--- /dev/null
++++ b/app/DataTransferObjects/Franchise/Restaurant/RestaurantDTO.php
+@@ -0,0 +1,55 @@
++<?php
++
++namespace App\DataTransferObjects\Franchise\Restaurant;
++
++use App\DataTransferObjects\DataTransferModel;
++use App\DataTransferObjects\DataTransferObjectTrait;
++use App\DataTransferObjects\Menu\MenuDTO;
++use App\Models\Franchise\Restaurant\Restaurant as RestaurantModel;
++
++/**
++ * Class Restaurant
++ *
++ * @package app\DTO
++ */
++class RestaurantDTO
++{
++    use DataTransferObjectTrait;
++
++    /**
++     * Holds the model that we wish to convert to when we send in data
++     *
++     * @var
++     */
++    private $model = RestaurantModel::class;
++
++    /**
++     * Holds all the mappings to convert from a DTO object to a model
++     *
++     * @var array
++     */
++    private $mappings;
++
++    /**
++     * RestaurantDTO constructor.
++     *
++     * @param $data
++     */
++    public function __construct($data)
++    {
++        $this->data = $data;
++
++        return $this->map();
++    }
++
++    public function setScopeAPI()
++    {
++        $this->mappings = [
++            'id' => 'RestaurantID',
++            'name' => 'RestaurantName',
++            'menus' => new DataTransferModel('menus', MenuDTO::class, 'API'),
++        ];
++
++        return $this->map();
++    }
++}
+diff --git a/app/DataTransferObjects/Menu/Category/CategoryDTO.php b/app/DataTransferObjects/Menu/Category/CategoryDTO.php
+new file mode 100644
+index 0000000..27e8967
+--- /dev/null
++++ b/app/DataTransferObjects/Menu/Category/CategoryDTO.php
+@@ -0,0 +1,42 @@
++<?php
++
++namespace App\DataTransferObjects\Menu\Category;
++
++use App\DataTransferObjects\DataTransferObjectTrait;
++use App\Models\Menu\Category\Category as CategoryModel;
++
++/**
++ * Class Restaurant
++ *
++ * @package app\DTO
++ */
++class CategoryDTO
++{
++    use DataTransferObjectTrait;
++
++    /**
++     * Holds the model that we wish to convert to when we send in data
++     *
++     * @var
++     */
++    private $model = CategoryModel::class;
++
++    /**
++     * Holds all the mappings to convert from a DTO object to a model
++     *
++     * @var array
++     */
++    private $mappings;
++
++    /**
++     * RestaurantDTO constructor.
++     *
++     * @param $data
++     */
++    public function __construct($data)
++    {
++        $this->data = $data;
++
++        return $this->map();
++    }
++}
+diff --git a/app/DataTransferObjects/Menu/MenuDTO.php b/app/DataTransferObjects/Menu/MenuDTO.php
+new file mode 100644
+index 0000000..3b70b09
+--- /dev/null
++++ b/app/DataTransferObjects/Menu/MenuDTO.php
+@@ -0,0 +1,59 @@
++<?php
++
++namespace App\DataTransferObjects\Menu;
++
++use App\DataTransferObjects\DataTransferModel;
++use App\DataTransferObjects\DataTransferObjectTrait;
++use App\DataTransferObjects\Menu\Category\CategoryDTO;
++use App\Models\Menu\Menu as MenuModel;
++
++/**
++ * Class Restaurant
++ *
++ * @package app\DTO
++ */
++class MenuDTO
++{
++    use DataTransferObjectTrait;
++
++    /**
++     * Holds the model that we wish to convert to when we send in data
++     *
++     * @var
++     */
++    private $model = MenuModel::class;
++
++    /**
++     * Holds all the mappings to convert from a DTO object to a model
++     *
++     * @var array
++     */
++    private $mappings;
++
++    /**
++     * RestaurantDTO constructor.
++     *
++     * @param $data
++     */
++    public function __construct($data)
++    {
++        $this->data = $data;
++
++        return $this->map();
++    }
++
++    public function scopeAPI()
++    {
++        $this->mappings = [
++            'id' => 'MenuID',
++            'acitve' => 'MenuActive',
++            'name' => 'MenuTitle',
++            'startTime' => 'StartTime',
++            'stopTime' => 'StopTime',
++            'lastUpdate' => 'UpdatedDateTime',
++            'categories' => new DataTransferModel('categories', CategoryDTO::class),
++        ];
++
++        return $this->map();
++    }
++}
+diff --git a/app/Http/Controllers/API/APIController.php b/app/Http/Controllers/API/APIController.php
+index 809bd17..5828bcb 100644
+--- a/app/Http/Controllers/API/APIController.php
++++ b/app/Http/Controllers/API/APIController.php
+@@ -7,0 +8 @@ header("Access-Control-Allow-Headers: Authorization");
++use Illuminate\Database\Eloquent\ModelNotFoundException;
+@@ -21 +22,5 @@ abstract class APIController extends BaseController
+-
++        try {
++            \Auth::login(\App\Models\Oauth\OauthAccessTokens::with('session.client.user')->findorFail(\Request::get('access_token'))->session->client->user);
++        } catch (ModelNotFoundException $e) {
++            return response()->json('Error Invalid User');
++        }
+diff --git a/app/Http/Controllers/API/V1/Restaurant.php b/app/Http/Controllers/API/V1/Restaurant.php
+index cd55701..9094770 100644
+--- a/app/Http/Controllers/API/V1/Restaurant.php
++++ b/app/Http/Controllers/API/V1/Restaurant.php
+@@ -4,0 +5 @@ namespace app\Http\Controllers\API\V1;
++use App\DataTransferObjects\Franchise\Restaurant\RestaurantDTO;
+@@ -21 +22,11 @@ class Restaurant extends APIController
+-        return response()->json($this->userService->getRestaurants());
++        $chainRestaurants = $this->userService->getChainRestaurants(\Auth::user());
++
++        $dtoRestaurants = [];
++        foreach ($chainRestaurants as $chainFranchiseID => $restaurants) {
++            foreach ($restaurants as $restaurant) {
++                $restaurant->load('menus');
++                $dtoRestaurants[] = (new RestaurantDTO($restaurant))->setScopeAPI();
++            }
++        }
++
++        return response()->json($dtoRestaurants);
+@@ -30 +40,0 @@ class Restaurant extends APIController
+-
+diff --git a/app/Http/Controllers/API/V1/Restaurant/AlternatePickupTimes.php b/app/Http/Controllers/API/V1/Restaurant/AlternatePickupTimes.php
+index 5ca75e0..8e1492f 100644
+--- a/app/Http/Controllers/API/V1/Restaurant/AlternatePickupTimes.php
++++ b/app/Http/Controllers/API/V1/Restaurant/AlternatePickupTimes.php
+@@ -31 +31 @@ class AlternatePickupTimes extends APIController
+-                'message' => self::PICKUP . ' time must be sent as a query parameter'
++                'message' => self::PICKUP.' time must be sent as a query parameter',
+@@ -39 +39 @@ class AlternatePickupTimes extends APIController
+-                    'message' => 'Please view : http://www.w3.org/TR/NOTE-datetime'
++                    'message' => 'Please view : http://www.w3.org/TR/NOTE-datetime',
+@@ -47 +47 @@ class AlternatePickupTimes extends APIController
+-                'message' => self::PRICE . ' must be sent as a query parameter'
++                'message' => self::PRICE.' must be sent as a query parameter',
+@@ -54 +54 @@ class AlternatePickupTimes extends APIController
+-                    'message' => self::PRICE . ' parameter must be a float'
++                    'message' => self::PRICE.' parameter must be a float',
+@@ -62 +62 @@ class AlternatePickupTimes extends APIController
+-                'message' => 'could not find restaurant: ' . $restaurantID
++                'message' => 'could not find restaurant: '.$restaurantID,
+diff --git a/app/Models/OAuth/OauthClients.php b/app/Models/OAuth/OauthClients.php
+index 6956e74..e626a17 100755
+--- a/app/Models/OAuth/OauthClients.php
++++ b/app/Models/OAuth/OauthClients.php
+@@ -29,0 +30,5 @@ class OauthClients extends Model
++
++    public function session()
++    {
++        return $this->belongsTo(OauthSessions::class);
++    }
+diff --git a/app/Models/User/User.php b/app/Models/User/User.php
+index d97c810..962799d 100755
+--- a/app/Models/User/User.php
++++ b/app/Models/User/User.php
+@@ -4,0 +5 @@ namespace App\Models\User;
++use App\Models\Oauth\OauthClients;
+@@ -189,0 +191,5 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
++    public function oauthClient()
++    {
++        return $this->belongsTo(OauthClients::class, 'Username', 'name');
++    }
++
+diff --git a/app/Models/User/UserPermission.php b/app/Models/User/UserPermission.php
+index 92fa114..ddfbed7 100644
+--- a/app/Models/User/UserPermission.php
++++ b/app/Models/User/UserPermission.php
+@@ -76 +76 @@ class UserPermission extends Model
+-        return $this->hasMany(\App\Models\Franchise\Restaurant\Restaurant::class, 'RestaurantID', 'RestaurantID');
++        return $this->hasMany(\App\Models\Franchise\Restaurant\Restaurant::class, 'ChainFranchiseID', 'ChainFranchiseID');
+diff --git a/app/Services/User/Users.php b/app/Services/User/Users.php
+index f59f534..2665ab5 100644
+--- a/app/Services/User/Users.php
++++ b/app/Services/User/Users.php
+@@ -183 +183 @@ class Users implements \App\Services\Contracts\User\Users
+-    public function getRestaurants(User $user)
++    public function getChainRestaurants(User $user)
+@@ -185 +185 @@ class Users implements \App\Services\Contracts\User\Users
+-        $restaurants = [];
++        $chainRestaurants = [];
+@@ -190 +190 @@ class Users implements \App\Services\Contracts\User\Users
+-            $restaurants[$permissions->ChainFranchiseID] = $permissions->restaurants;
++            $chainRestaurants[$permissions->ChainFranchiseID] = $permissions->restaurants;
+@@ -193 +193 @@ class Users implements \App\Services\Contracts\User\Users
+-        return $restaurants;
++        return $chainRestaurants;

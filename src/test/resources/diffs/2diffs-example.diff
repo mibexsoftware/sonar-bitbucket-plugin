@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/company/sonar/bitbucket/SimpleClass.java b/src/main/java/com/company/sonar/bitbucket/SimpleClass.java
+index af57034..f608804 100644
+--- a/src/main/java/com/company/sonar/bitbucket/SimpleClass.java
++++ b/src/main/java/com/company/sonar/bitbucket/SimpleClass.java
+@@ -9,6 +9,7 @@ public class SimpleClass {
+-		return "blub";
++		String s = null;
++		return s.substring(1);
+diff --git a/src/test/java/com/company/sonar/bitbucket/SimpleTest.java b/src/test/java/com/company/sonar/bitbucket/SimpleTest.java
+index 34f28ac..e58eaf8 100644
+--- a/src/test/java/com/company/sonar/bitbucket/SimpleTest.java
++++ b/src/test/java/com/company/sonar/bitbucket/SimpleTest.java
+@@ -1,5 +1,11 @@
+ package com.company.sonar.bitbucket;
++import org.junit.Test;
++import com.company.sonar.bitbucket.SimpleClass;
++
++	public void testIt() {
++		SimpleClass simpleClass = new SimpleClass();
++   }

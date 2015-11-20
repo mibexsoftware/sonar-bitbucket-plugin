@@ -1,5 +1,6 @@
 package ch.mibex.bitbucket.sonar.diff
 
+import ch.mibex.bitbucket.sonar.utils.StringUtils
 import org.junit.runner.RunWith
 import org.specs2.matcher.{ParserMatchers, StringMatchers}
 import org.specs2.mutable.Specification
@@ -326,7 +327,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
           |-    }
           |-
           |-    /**
-          |-     * Rigourous Test :-)
+          |-     * Rigorous Test :-)
           |-     */
           |-    public void testApp()
           |-    {
@@ -382,7 +383,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
               RemovedLine("    }"),
               RemovedLine(""),
               RemovedLine("    /**"),
-              RemovedLine("     * Rigourous Test :-)"),
+              RemovedLine("     * Rigorous Test :-)"),
               RemovedLine("     */"),
               RemovedLine("    public void testApp()"),
               RemovedLine("    {"),
@@ -527,6 +528,18 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
           ))
         )
       )
+    }
+
+    "parse 2 diffs example successfully" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/2diffs-example.diff"))
+    }
+
+    "parse 5 diffs example successfully" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/5diffs-example.diff"))
+    }
+
+    "parse PR128 with multiple diffs successfully" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/PR128.diff"))
     }
 
   }

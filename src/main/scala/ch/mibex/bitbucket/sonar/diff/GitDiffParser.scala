@@ -51,7 +51,9 @@ object GitDiffParser extends RegexParsers {
 
   def allDiffs: Parser[List[GitDiff]] = rep1(gitDiff)
 
-  def gitDiff: Parser[GitDiff] = gitDiffHeader ~ extendedDiffHeader ~ hunks ^^ { case fc ~ h ~ hs => GitDiff(fc, h, hs) }
+  def gitDiff: Parser[GitDiff] = gitDiffHeader ~ extendedDiffHeader ~ hunks <~ opt("\\ No newline at end of file" <~ rep(nl)) ^^ {
+    case fc ~ h ~ hs => GitDiff(fc, h, hs)
+  }
 
   def gitDiffHeader: Parser[FileChange] = "diff --git " ~> ("a/" ~> filePath) ~ (" b/" ~> filePath) <~ nl ^^ {
     case oldF ~ newF => FileChange(oldF, newF)
@@ -121,11 +123,11 @@ object GitDiffParser extends RegexParsers {
   def hunkStart: Parser[HunkHeader] =
     fromToRange ~ opt(ctxLine) <~ opt(nl) ^^ { case ftr ~ optC => HunkHeader(ftr, optC) }
 
-  def ctxLine: Parser[CtxLine] = " " ~> """.*""".r <~ nl ^^ { l => CtxLine(l) }
+  def ctxLine: Parser[CtxLine] = " " ~> """.*""".r <~ opt(nl) ^^ { l => CtxLine(l) }
 
-  def addedLine: Parser[AddedLine] = "+" ~> """.*""".r <~ nl ^^ { l => AddedLine(l) }
+  def addedLine: Parser[AddedLine] = "+" ~> """.*""".r <~ opt(nl) ^^ { l => AddedLine(l) }
 
-  def removedLine: Parser[RemovedLine] = "-" ~> """.*""".r <~ nl ^^ { l => RemovedLine(l) }
+  def removedLine: Parser[RemovedLine] = "-" ~> """.*""".r <~ opt(nl) ^^ { l => RemovedLine(l) }
 
   def fromFile: Parser[String] = "--- " ~> filePath <~ nl
 
