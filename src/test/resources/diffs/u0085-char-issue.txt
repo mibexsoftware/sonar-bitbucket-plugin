@@ -1,0 +1,8 @@
+diff --git a/public/vendor/swaggervel/swagger-ui.min.js b/public/vendor/swaggervel/swagger-ui.min.js
+new file mode 100644
+index 0000000..01470ef
+--- /dev/null
++++ b/public/vendor/swaggervel/swagger-ui.min.js
+@@ -0,0 +1,13 @@
++1!==n.length&&d(e,"YAML directive accepts exactly one argument"),r=/^([0-9]+)\.([0-9]+)$/.exec(n[0]),null===r&&d(e,"ill-formed argument of the YAML directive"),i=parseInt(r[1],10),a=parseInt(r[2],10),1!==i&&d(e,"unacceptable YAML version of the document"),e.version=n[0],e.checkLineBreaks=2>a,1!==a&&2!==a&&m(e,"unsupported YAML version of the document")},TAG:function(e,t,n){var r,i;2!==n.length&&d(e,"TAG directive accepts exactly two arguments"),r=n[0],i=n[1],ne.test(r)||d(e,"ill-formed tag handle (first argument) of the TAG directive"),V.call(e.tagMap,r)&&d(e,'there is a previously declared suffix for "'+r+'" tag handle'),re.test(i)||d(e,"ill-formed tag prefix (second argument) of the TAG directive"),e.tagMap[r]=i}};t.exports.loadAll=$,t.exports.load=M,t.exports.safeLoadAll=R,t.exports.safeLoad=F},{"./common":23,"./exception":25,"./mark":27,"./schema/default_full":30,"./schema/default_safe":31}],27:[function(e,t,n){"use strict";function r(e,t,n,r,i){this.name=e,this.buffer=t,this.position=n,this.line=r,this.column=i}var i=e("./common");r.prototype.getSnippet=function(e,t){var n,r,a,o,s;if(!this.buffer)return null;for(e=e||4,t=t||75,n="",r=this.position;r>0&&-1===""
+\ No newline at end of file

@@ -24,7 +24,9 @@ object GitDiffParser extends RegexParsers {
 
   case class FileChange(oldFile: String, newFile: String)
 
-  case class GitDiff(gitDiffHeader: FileChange, header: ExtendedDiffHeader, hunks: List[Hunk]) {
+  sealed trait Diff
+  case class BinaryDiff() extends Diff
+  case class GitDiff(gitDiffHeader: FileChange, header: ExtendedDiffHeader, hunks: List[Hunk]) extends Diff {
     val isNewFile = header.headerLines.exists {
       case NewFileMode(_) => true
       case _ => false
@@ -49,7 +51,15 @@ object GitDiffParser extends RegexParsers {
   case class ParsingFailure(reason: String)
 
 
-  def allDiffs: Parser[List[GitDiff]] = rep1(gitDiff)
+  def allDiffs: Parser[List[Diff]] = rep1(diff)
+
+  def diff: Parser[Diff] = binaryDiff | gitDiff
+
+  def readUpToNextDiffOrEnd = """(?s).+?(?=((?:diff --git)|$))\n?""".r
+
+  def binaryDiff: Parser[BinaryDiff] = gitDiffHeader ~ extendedDiffHeader ~ "GIT binary patch" ~ readUpToNextDiffOrEnd  ^^ {
+    _ => BinaryDiff()
+  }
 
   def gitDiff: Parser[GitDiff] = gitDiffHeader ~ extendedDiffHeader ~ hunks <~ opt("\\ No newline at end of file" <~ rep(nl)) ^^ {
     case fc ~ h ~ hs => GitDiff(fc, h, hs)
@@ -95,19 +105,22 @@ object GitDiffParser extends RegexParsers {
 
   def similarity: Parser[Int] = """\d{1,3}""".r ^^ { _.toInt }
 
-  def hash: Parser[String] = """[0-9a-f]{7}""".r
+  def hash: Parser[String] = """[0-9a-f]{7,}""".r
 
   def extendedDiffHeader: Parser[ExtendedDiffHeader] =
-    rep(oldMode | newMode | deletedFileMode | newFileMode | copyFrom | copyTo | renameFrom | renameTo
-      | similarityIndex | dissimilarityIndex) ~ index ^^
+    rep(
+        oldMode | newMode | deletedFileMode | newFileMode
+      | copyFrom | copyTo | renameFrom | renameTo
+      | similarityIndex | dissimilarityIndex
+    ) ~ index ^^
       { case lines ~ i => ExtendedDiffHeader(lines, i) }
-
 
   //  --- a/builtin-http-fetch.c
   //  +++ b/http-fetch.c
   def unifiedDiffHeader: Parser[FileChange] = fromFile ~ toFile ^^ { case oldF ~ newF => FileChange(oldF, newF) }
 
-  def hunks: Parser[List[Hunk]] = unifiedDiffHeader ~> rep1(hunk)
+  // hunks do not exist when an empty file was added
+  def hunks: Parser[List[Hunk]] = opt(unifiedDiffHeader) ~> rep(hunk)
 
   def hunk: Parser[Hunk] = hunkStart ~ rep1(lineChange) ^^ { case hh ~ lines => Hunk(hh, lines) }
 
@@ -135,7 +148,7 @@ object GitDiffParser extends RegexParsers {
 
   def num: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
-  def parse(diff: String): Either[ParsingFailure, List[GitDiff]] = {
+  def parse(diff: String): Either[ParsingFailure, List[Diff]] = {
     parseAll(allDiffs, diff) match {
       case Success(s, _) => Right(s)
       case NoSuccess(msg, _) => Left(ParsingFailure(msg))

@@ -3,7 +3,7 @@ package ch.mibex.bitbucket.sonar.diff
 import ch.mibex.bitbucket.sonar.SonarBBPlugin
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest}
-import ch.mibex.bitbucket.sonar.diff.GitDiffParser.GitDiff
+import ch.mibex.bitbucket.sonar.diff.GitDiffParser.{BinaryDiff, Diff, GitDiff}
 import ch.mibex.bitbucket.sonar.utils.LogUtils
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
@@ -22,9 +22,12 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
 
       inputFileCache.resolveRepoRelativePath(i.componentKey()) match {
         case Some(filePath) =>
-          val isIssueOnChangedLines = (diff: GitDiff) =>
-            (diff.gitDiffHeader.newFile == filePath || diff.gitDiffHeader.oldFile == filePath) &&
-              (diff.isNewFile || isOnChangedLine(lineNr, diff))
+          val isIssueOnChangedLines = (diff: Diff) => diff match {
+            case diff: GitDiff =>
+              (diff.gitDiffHeader.newFile == filePath || diff.gitDiffHeader.oldFile == filePath) &&
+                (diff.isNewFile || isOnChangedLine(lineNr, diff))
+            case binary: BinaryDiff => false
+          }
           diffs.exists(isIssueOnChangedLines)
         case None =>
           false  // ignore these issues
