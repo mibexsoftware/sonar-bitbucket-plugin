@@ -4,6 +4,8 @@ import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 
 import ch.mibex.bitbucket.sonar.SonarBBPlugin
+import org.sonar.api.CoreProperties
+import org.sonar.api.config.Settings
 import org.sonar.api.issue.Issue
 import org.sonar.api.rule.{RuleKey, Severity}
 import scala.collection.JavaConverters._
@@ -14,7 +16,7 @@ object SonarUtils {
   private val SeverityImagesRootUrl =
     """https://raw.githubusercontent.com/mibexsoftware/
       |sonar-bitbucket-plugin/master/src/main/resources/images/severity""".stripMargin.replaceAll("\n", "")
-  
+
   def isSeverityGreaterOrEqual(issue: Issue, referenceSeverity: String): Boolean = {
     val severities = Severity.ALL.asScala
     val issueSeverityIdx = severities.indexOf(issue.severity())
@@ -29,8 +31,8 @@ object SonarUtils {
 
   def sonarMarkdownPrefix(): String = "**SonarQube Analysis**"
 
-  def renderAsMarkdown(issue: Issue): String = {
-    val ruleLink = getRuleLink(issue.ruleKey())
+  def renderAsMarkdown(issue: Issue, settings: Settings): String = {
+    val ruleLink = getRuleLink(issue.ruleKey(), settings)
     val sb = new mutable.StringBuilder()
     sb.append(toImageMarkdown(issue.severity()))
       .append(" ")
@@ -40,8 +42,21 @@ object SonarUtils {
     sb.toString()
   }
 
-  private def getRuleLink(ruleKey: RuleKey) =
-    s"[[Details]](http://nemo.sonarqube.org/coding_rules#rule_key=${encodeForUrl(ruleKey.toString)})"
+  private def getRuleLink(ruleKey: RuleKey, settings: Settings) =
+    s"[[Details]](${getSonarUrl(settings)}coding_rules#rule_key=${encodeForUrl(ruleKey.toString)})"
+
+  private def getSonarUrl(settings: Settings) = {
+    val baseUrl = if (settings.hasKey(CoreProperties.SERVER_BASE_URL)) {
+      settings.getString(CoreProperties.SERVER_BASE_URL)
+    } else {
+      settings.getString("sonar.host.url")
+    }
+    if (!baseUrl.endsWith("/")) {
+      baseUrl + "/"
+    } else {
+      baseUrl
+    }
+  }
 
   private def encodeForUrl(url: String) = {
     try {

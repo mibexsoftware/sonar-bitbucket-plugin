@@ -8,6 +8,7 @@ import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
 import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
+import org.sonar.api.config.Settings
 import org.sonar.api.issue.{Issue, ProjectIssues}
 
 import scala.collection.JavaConverters._
@@ -19,6 +20,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
                             bitbucketClient: BitbucketClient,
                             inputFileCache: InputFileCache,
                             pluginConfig: SonarBBPluginConfig,
+                            settings: Settings,
                             issuesOnChangedLinesFilter: IssuesOnChangedLinesFilter) extends BatchComponent {
   private val logger = LoggerFactory.getLogger(getClass)
 
@@ -89,7 +91,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
             commentsToBeAdded(repoRelPath) += lineNr -> new StringBuilder(SonarUtils.sonarMarkdownPrefix())
           }
 
-          commentsToBeAdded(repoRelPath)(lineNr).append("\n\n" + SonarUtils.renderAsMarkdown(i))
+          commentsToBeAdded(repoRelPath)(lineNr).append("\n\n" + SonarUtils.renderAsMarkdown(i, settings))
         }
       }
 

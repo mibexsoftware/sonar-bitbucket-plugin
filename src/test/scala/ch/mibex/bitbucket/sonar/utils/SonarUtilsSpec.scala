@@ -1,6 +1,8 @@
 package ch.mibex.bitbucket.sonar.utils
 
 import org.junit.runner.RunWith
+import org.sonar.api.CoreProperties
+import org.sonar.api.config.Settings
 import org.sonar.api.issue.Issue
 import org.sonar.api.rule.{RuleKey, Severity}
 import org.specs2.mock.Mockito
@@ -63,16 +65,34 @@ class SonarUtilsSpec extends Specification with Mockito {
 
   "renderIssue" should {
 
-    "yield the expected Markdown" in {
+    "yield the expected Markdown with given server base URL" in {
       val issue = mock[Issue]
+      val settings = mock[Settings]
       issue.severity() returns Severity.INFO
       issue.message() returns "Either remove or fill this block of code."
       issue.ruleKey() returns RuleKey.parse("squid:S00108")
-      SonarUtils.renderAsMarkdown(issue) must_==
+      settings.hasKey(CoreProperties.SERVER_BASE_URL) returns true
+      settings.getString(CoreProperties.SERVER_BASE_URL) returns "http://localhost:9000"
+      SonarUtils.renderAsMarkdown(issue, settings) must_==
         """![INFO](https://raw.githubusercontent.com/mibexsoftware/
           |sonar-bitbucket-plugin/master/src/main/resources/images/severity/INFO.png) Either remove
-          | or fill this block of code. [[Details]](http://nemo.sonarqube.org/
+          | or fill this block of code. [[Details]](http://localhost:9000/
           |coding_rules#rule_key=squid%3AS00108)""".stripMargin.replaceAll("\n", "")
+    }
+
+    "yield the expected Markdown with sonar.host.url" in {
+      val issue = mock[Issue]
+      val settings = mock[Settings]
+      issue.severity() returns Severity.MAJOR
+      issue.message() returns "Check that null is not used"
+      issue.ruleKey() returns RuleKey.parse("Scalastyle:org.scalastyle.scalariform.NullChecker")
+      settings.hasKey(CoreProperties.SERVER_BASE_URL) returns false
+      settings.getString("sonar.host.url") returns "http://mysonar"
+      SonarUtils.renderAsMarkdown(issue, settings) must_==
+        """![MAJOR](https://raw.githubusercontent.com/mibexsoftware/
+          |sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Check that null is not used
+          | [[Details]](http://mysonar/coding_rules#rule_key=Scalastyle%3Aorg.scalastyle.scalariform.NullChecker)"""
+          .stripMargin.replaceAll("\n", "")
     }
 
   }
