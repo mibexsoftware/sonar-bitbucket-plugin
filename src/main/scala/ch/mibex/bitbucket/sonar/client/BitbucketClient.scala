@@ -5,6 +5,7 @@ import javax.ws.rs.core.MediaType
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.utils.{LogUtils, JsonUtils}
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
+import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
 import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
@@ -30,6 +31,9 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
 
   private def createJerseyClient() = {
     val client = Client.create(createJerseyConfig())
+    if (logger.isDebugEnabled) {
+      client.addFilter(new LoggingFilter())
+    }
     val authentication = new ClientAuthentication(config)
     authentication.configure(client)
     client
