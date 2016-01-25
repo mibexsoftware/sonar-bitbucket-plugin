@@ -1,0 +1,38 @@
+diff --git a/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage/billing.phtml b/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage/billing.phtml
+index 234d324..a41b60e 100755
+--- a/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage/billing.phtml
++++ b/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage/billing.phtml
+@@ -164,3 +164,3 @@ $customer = Mage::getSingleton('customer/session')->getCustomer();
+                             <input type="text" name="billing[telephone]"
+-                                   ng-model="telephone" ui-mask="(+<?php echo $suffix ?>) 999 999 999"  ui-mask-placeholder ui-mask-placeholder-char="_" ng-init="telephone = '<?php echo $tel ?>'"
++                                   ng-model="telephone" ng-init="telephone = '<?php echo $tel ?>'"
+                                    value="<?php echo $this->escapeHtml($this->getAddress()->getTelephone()) ?>"
+diff --git a/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage_3columns_fwc.phtml b/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage_3columns_fwc.phtml
+index 5cb57be..acde8a5 100755
+--- a/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage_3columns_fwc.phtml
++++ b/app/design/frontend/fwc/default/template/lotusbreath/onestepcheckout/onepage_3columns_fwc.phtml
+@@ -259 +259,7 @@ $commentpos = Mage::getStoreConfig('lotusbreath_onestepcheckout/layout/commentpo
+ <script type="text/javascript" src="<?php echo $this->getSkinUrl('onestepcheckout/fwc-progressbar.js') ?>"></script>
++<script>
++    (function($, window, document, undefined){
++            var $j = $.noConflict();
++            $j('[id$=":telephone"]').mask('+48 999-999-999');
++    })(jQuery, window, document);
++</script>
+\ No newline at end of file
+diff --git a/app/design/frontend/fwc/default/template/persistent/customer/form/register.phtml b/app/design/frontend/fwc/default/template/persistent/customer/form/register.phtml
+index d2c9fca..48bcbdb 100644
+--- a/app/design/frontend/fwc/default/template/persistent/customer/form/register.phtml
++++ b/app/design/frontend/fwc/default/template/persistent/customer/form/register.phtml
+@@ -88,3 +88,3 @@
+                                                 <label for="telephone" class="required"><em>*</em><?php echo $this->__('Telephone') ?></label>
+-                                                <input ng-model="telephone" ui-mask="(+<?php echo $suffix ?>) 999 999 999"  ui-mask-placeholder ui-mask-placeholder-char="_" ng-init="telephone = '<?php echo $tel ?>'" type="text" name="telephone" id="telephone" class="input-text required-entry" />
++                                                <input ng-model="telephone" ng-init="telephone = '<?php echo $tel ?>'" type="text" name="telephone" id="telephone" class="input-text required-entry" />
+                                             </div>
+@@ -243,2 +243,6 @@
+                     var dataForm = new VarienForm('form-validate-register', true);
++                    (function($, window, document, undefined){
++                            var $j = $.noConflict();
++                            $j('#telephone').mask('+48 999-999-999');
++                    })(jQuery, window, document);
+                     //]]>

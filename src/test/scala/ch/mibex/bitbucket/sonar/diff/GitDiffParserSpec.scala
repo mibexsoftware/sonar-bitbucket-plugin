@@ -12,7 +12,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
   import GitDiffParser._
 
 
-  "diff headers" should {
+  "diff headers mode" should {
 
     "parse file mode" in {
       fileMode must succeedOn("100644").withResult(100644)
@@ -44,6 +44,10 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
       deletedFileMode must failOn("deletedfilemode100644")
     }
 
+  }
+
+  "diff headers copy" should {
+
     "parse file path" in {
       filePath must succeedOn("a/b/c.txt").withResult("a/b/c.txt")
       filePath must failOn("")
@@ -60,6 +64,9 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
       copyTo must failOn("copy to describe.c")
       copyTo must failOn("copytodescribe.c")
     }
+  }
+
+  "diff headers rename and similarity" should {
 
     "parse rename from" in {
       renameFrom must succeedOn("rename from describe.c\n").withResult(RenameFrom("describe.c"))
@@ -569,6 +576,22 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
     "parse diff with u0085 new line character" in {
       allDiffs must succeedOn(StringUtils.readFile("/diffs/u0085-char-issue.txt"))
     }.pendingUntilFixed
+
+    "Github issue #8" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8.txt"))
+    }
+
+    "Github issue #8 no newline at eof" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-no-newline-at-eof.txt"))
+    }
+
+    "Github issue #8 wrong example 1" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong1.txt"))
+    }
+
+    "Github issue #8 wrong example 3" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong3.txt"))
+    }
 
     "parse PR140 with multiple diffs successfully" in {
       allDiffs must succeedOn(StringUtils.readFile("/diffs/PR140.diff")).withResult(

@@ -1,0 +1,23 @@
+diff --git a/dev/bin/custom/core/resources/data/projectdata-9-cronjobs.file b/dev/bin/custom/core/resources/data/projectdata-9-cronjobs.file
+index ebf6077..72ad643 100644
+--- a/dev/bin/custom/core/resources/data/projectdata-9-cronjobs.file
++++ b/dev/bin/custom/core/resources/data/projectdata-9-cronjobs.file
+@@ -10,0 +11 @@ CronJob; code[unique=true];job(code);singleExecutable;sessionLangu
++;BulkImportJob;BulkImportJob;false;en
+@@ -24 +25,3 @@ Trigger;cronJob(code)[unique=true];cronExpression
+-;SetExclusionCronjob;0 0 0 * * ?
+\ No newline at end of file
++;SetExclusionCronjob;0 0 0 * * ?
++;BulkImportJob;0 0 0 * * ?
++
+diff --git a/dev/bin/custom/core/resources/core-cronjob-spring.xml b/dev/bin/custom/core/resources/core-cronjob-spring.xml
+index 2d1e521..80305ff 100644
+--- a/dev/bin/custom/core/resources/core-cronjob-spring.xml
++++ b/dev/bin/custom/core/resources/core-cronjob-spring.xml
+@@ -68,0 +69 @@
++	<bean id="BulkImportProductsJob" class="com.dev.cronjob.imports.BulkImportJob" autowire="byName" />
+@@ -84 +85,2 @@
+-</beans>
+\ No newline at end of file
++</beans>
++

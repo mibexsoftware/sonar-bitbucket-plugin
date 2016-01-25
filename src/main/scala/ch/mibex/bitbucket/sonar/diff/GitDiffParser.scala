@@ -61,7 +61,7 @@ object GitDiffParser extends RegexParsers {
     _ => BinaryDiff()
   }
 
-  def gitDiff: Parser[GitDiff] = gitDiffHeader ~ extendedDiffHeader ~ hunks <~ opt("\\ No newline at end of file" <~ rep(nl)) ^^ {
+  def gitDiff: Parser[GitDiff] = gitDiffHeader ~ extendedDiffHeader ~ hunks ^^ {
     case fc ~ h ~ hs => GitDiff(fc, h, hs)
   }
 
@@ -124,7 +124,7 @@ object GitDiffParser extends RegexParsers {
 
   def hunk: Parser[Hunk] = hunkStart ~ rep1(lineChange) ^^ { case hh ~ lines => Hunk(hh, lines) }
 
-  def lineChange: Parser[LineChange] = ctxLine | addedLine | removedLine
+  def lineChange: Parser[LineChange] = ctxLine | addedLine | removedLine | noNewLineAtEOF | newLine
 
   def fromToRange: Parser[FromToRange] =
     ("@@ " ~> "-" ~> num) ~ opt("," ~> num) ~ (" +" ~> num) ~ opt("," ~> num) <~ " @@" ^^ {
@@ -135,6 +135,10 @@ object GitDiffParser extends RegexParsers {
   //  @@ from-file-range to-file-range @@ [header]
   def hunkStart: Parser[HunkHeader] =
     fromToRange ~ opt(ctxLine) <~ opt(nl) ^^ { case ftr ~ optC => HunkHeader(ftr, optC) }
+
+  def noNewLineAtEOF: Parser[CtxLine] = "\\ No newline at end of file" <~ opt(nl) ^^ { l => CtxLine(l) }
+
+  def newLine: Parser[CtxLine] = nl ^^ { l => CtxLine("") }
 
   def ctxLine: Parser[CtxLine] = " " ~> """.*""".r <~ opt(nl) ^^ { l => CtxLine(l) }
 

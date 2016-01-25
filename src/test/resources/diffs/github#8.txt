@@ -1,0 +1,464 @@
+diff --git a/app/code/local/Developer/Categoriespanel/Helper/Data.php b/app/code/local/Developer/Categoriespanel/Helper/Data.php
+index 5d6b618..24dae8d 100644
+--- a/app/code/local/Developer/Categoriespanel/Helper/Data.php
++++ b/app/code/local/Developer/Categoriespanel/Helper/Data.php
+@@ -18 +18 @@ class Developer_Categoriespanel_Helper_Data extends Mage_Core_Helper_Abstract {
+-            ->addAttributeToSort('position', 'asc');
++            ->addAttributeToSort('categoriespanel_position', 'asc');
+diff --git a/app/code/local/Dev/Bestseller/Block/Bestsellers.php b/app/code/local/Dev/Bestseller/Block/Bestsellers.php
+new file mode 100644
+index 0000000..b11fdd8
+--- /dev/null
++++ b/app/code/local/Dev/Bestseller/Block/Bestsellers.php
+@@ -0,0 +1,12 @@
++<?php
++
++class Dev_Bestseller_Block_Bestsellers extends Mage_Core_Block_Template
++{
++    /**
++     * Function return best selling products sort by ordered quantity.
++     * @return object
++     */
++    public function getBestsellerProducts() {
++        return Mage::getModel('bestseller/bestsellers')->_getCollection();
++    }
++}
+\ No newline at end of file
+diff --git a/app/code/local/Dev/Bestseller/Model/Bestsellers.php b/app/code/local/Dev/Bestseller/Model/Bestsellers.php
+new file mode 100644
+index 0000000..6a690e5
+--- /dev/null
++++ b/app/code/local/Dev/Bestseller/Model/Bestsellers.php
+@@ -0,0 +1,46 @@
++<?php
++
++class Dev_Bestseller_Model_Bestsellers extends Mage_Core_Model_Abstract {
++
++    CONST MAX_MONTHS   = '-1 month';
++    CONST MAX_PRODUCTS = 9;
++
++    protected $_collection;
++
++    public function _getCollection() {
++        return $this->getBestsellers();
++    }
++
++    protected function getBestsellers() {
++        $storeId = (int) Mage::app()->getStore()->getId();
++        $date    = new DateTime(Mage::getModel('core/date')->date('Y-m-d'));
++        $toDate  = $date->format('Y-m-d');
++
++        $date->modify(self::MAX_MONTHS);
++
++        $fromDate = $date->format('Y-m-d');
++
++        $this->_collection = Mage::getResourceModel('reports/product_collection')
++            ->addAttributeToSelect('*')
++            ->addOrderedQty($fromDate, $toDate)
++            ->setStoreId($storeId)
++            ->addStoreFilter($storeId)
++            ->addCategoryFilter(Mage::registry('current_category'))
++            ->setOrder('ordered_qty', 'desc')
++            ->setPageSize(self::MAX_PRODUCTS);
++
++        $this->_collection->getSelect()
++            ->join(
++                array(
++                    'inv_stock_status' => $this->_collection->getTable('cataloginventory/stock_status')
++                ),
++                'inv_stock_status.product_id = e.entity_id AND inv_stock_status.stock_status = 1',
++                array()
++            );
++
++        Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($this->_collection);
++        Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($this->_collection);
++
++        return $this->_collection;
++    }
++}
+diff --git a/app/code/local/Dev/Bestseller/etc/config.xml b/app/code/local/Dev/Bestseller/etc/config.xml
+new file mode 100644
+index 0000000..74aec0c
+--- /dev/null
++++ b/app/code/local/Dev/Bestseller/etc/config.xml
+@@ -0,0 +1,42 @@
++<?xml version="1.0"?>
++<config>
++    <modules>
++        <Dev_Bestseller>
++            <version>1.0.0</version>
++        </Dev_Bestseller>
++    </modules>
++    <global>
++        <blocks>
++            <bestseller>
++                <class>Dev_Bestseller_Block</class>
++            </bestseller>
++        </blocks>
++        <models>
++            <bestseller>
++                <class>Dev_Bestseller_Model</class>
++            </bestseller>
++        </models>
++        <resources>
++            <Dev_bestseller_setup>
++                <setup>
++                    <module>Dev_Bestseller</module>
++                    <!-- This next line is absolutely critical so that we call the appropriate setup class -->
++                    <class>Mage_Catalog_Model_Resource_Setup</class>
++                    <connection>
++                        <use>core_setup</use>
++                    </connection>
++                </setup>
++            </Dev_bestseller_setup>
++            <Dev_bestseller_setup_write>
++                <connection>
++                    <use>core_write</use>
++                </connection>
++            </Dev_bestseller_setup_write>
++            <Dev_bestseller_setup_read>
++                <connection>
++                    <use>core_read</use>
++                </connection>
++            </Dev_bestseller_setup_read>
++        </resources>
++    </global>
++</config>
+\ No newline at end of file
+diff --git a/app/code/local/Dev/Bestseller/sql/Dev_bestseller_setup/mysql4-install-1.0.0.php b/app/code/local/Dev/Bestseller/sql/Dev_bestseller_setup/mysql4-install-1.0.0.php
+new file mode 100644
+index 0000000..5fa5f0d
+--- /dev/null
++++ b/app/code/local/Dev/Bestseller/sql/Dev_bestseller_setup/mysql4-install-1.0.0.php
+@@ -0,0 +1,40 @@
++<?php
++$installer = $this;
++$installer->startSetup();
++
++$entityTypeId     = $installer->getEntityTypeId('catalog_category');
++$attributeSetId   = $installer->getDefaultAttributeSetId($entityTypeId);
++$attributeGroupId = $installer->getDefaultAttributeGroupId($entityTypeId, $attributeSetId);
++$installer->removeAttribute('catalog_category', 'bestseller_enabled');
++$installer->addAttribute('catalog_category', 'bestseller_enabled',  array(
++    'label'         => 'Bestsellers from category',
++    'note'          => 'Enabled?',
++    'group'         => 'General Information',
++    'type'          => 'int',
++    'input'         => 'select',
++    'global'        => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_STORE,
++    'visible'       => true,
++    'required'          => false,
++    'user_defined'      => true,
++    'default'           => '1',
++    'visible_on_front' => true,
++    'source' => 'eav/entity_attribute_source_boolean'
++));
++
++$startTime  = microtime(true);
++$resource   = Mage::getResourceModel('catalog/category');
++$categories = Mage::getModel('catalog/category')
++    ->getCollection()
++    ->addAttributeToSelect(array('id', 'name', 'bestseller_enabled'))
++    ->addIsActiveFilter();
++
++$i = 0;
++foreach($categories as $category) {
++    $category->setStoreId(0);   // 0 = All Store Views
++    $category->setData('bestseller_enabled', '1');
++    $resource->saveAttribute($category, 'bestseller_enabled');
++    Mage::log("[".$i++."] Category: #" . $category->getId() . " | " . $category->getName() . " done.", null, 'bestsellers.log');
++}
++Mage::log("Time: " . (microtime(true) - $startTime) . " seconds.", null, 'bestsellers.log');
++
++$installer->endSetup();
+\ No newline at end of file
+diff --git a/app/code/local/Dev/DescriptionCategory/etc/config.xml b/app/code/local/Dev/DescriptionCategory/etc/config.xml
+index 8ffeac8..d56cf5c 100644
+--- a/app/code/local/Dev/DescriptionCategory/etc/config.xml
++++ b/app/code/local/Dev/DescriptionCategory/etc/config.xml
+@@ -6 +6 @@
+-            <version>1.0.3</version>
++            <version>1.0.4</version>
+diff --git a/app/code/local/Dev/DescriptionCategory/sql/Dev_descriptioncategory_setup/mysql4-upgrade-1.0.3-1.0.4.php b/app/code/local/Dev/DescriptionCategory/sql/Dev_descriptioncategory_setup/mysql4-upgrade-1.0.3-1.0.4.php
+new file mode 100644
+index 0000000..30cb15d
+--- /dev/null
++++ b/app/code/local/Dev/DescriptionCategory/sql/Dev_descriptioncategory_setup/mysql4-upgrade-1.0.3-1.0.4.php
+@@ -0,0 +1,34 @@
++
++<?php
++$installer = $this;
++$installer->startSetup();
++
++$entityTypeId     = $installer->getEntityTypeId('catalog_category');
++$attributeSetId   = $installer->getDefaultAttributeSetId($entityTypeId);
++$attributeGroupId = $installer->getDefaultAttributeGroupId($entityTypeId, $attributeSetId);
++$installer->removeAttribute('catalog_category', 'categoriespanel_position');
++$installer->addAttribute('catalog_category', 'categoriespanel_position', array(
++    'type'                       => 'text',
++    'label'                      => Mage::helper('Developer_catalog')->__('Position on homepage'),
++    'input'                      => 'text',
++    'required'                   => false,
++    'sort_order'                 => 11,
++    'global'                     => Mage_Catalog_Model_Resource_Eav_Attribute::SCOPE_STORE,
++    'group'                      => 'General Information',
++    'note'                       => Mage::helper('Developer_catalog')->__('Position in section "Recommended categories" on homepage'),
++    'class'                      => '',
++    'backend'                    => '',
++    'frontend'                   => '',
++    'visible'                    => true,
++    'searchable'                 => false,
++    'filterable'                 => false,
++    'comparable'                 => false,
++    'visible_in_advanced_search' => false,
++    'unique'                     => false,
++    'user_defined'		         => true,
++    'visible_on_front'	         => true,
++    'wysiwyg_enabled'	         => false,
++    'is_html_allowed_on_front'	 => true,
++));
++
++$installer->endSetup();
+diff --git a/app/design/frontend/default/store/layout/local.xml b/app/design/frontend/default/store/layout/local.xml
+index aa68495..3455979 100644
+--- a/app/design/frontend/default/store/layout/local.xml
++++ b/app/design/frontend/default/store/layout/local.xml
+@@ -555,3 +555,3 @@
+-	<reference name="content">
+-
+-		</reference> 
++        <reference name="product_list">
++            <block type="bestseller/bestsellers" name="Dev_bestseller" as="Dev_bestseller" template="bestseller/bestseller.phtml"/>
++        </reference>
+diff --git a/app/design/frontend/default/store/locale/pl_PL/translate.csv b/app/design/frontend/default/store/locale/pl_PL/translate.csv
+index b0e64f9..ba6fe17 100644
+--- a/app/design/frontend/default/store/locale/pl_PL/translate.csv
++++ b/app/design/frontend/default/store/locale/pl_PL/translate.csv
+@@ -137,0 +138 @@
++"Recommended categories","Polecane kategorie"
+diff --git a/app/design/frontend/default/store/template/bestseller/bestseller.phtml b/app/design/frontend/default/store/template/bestseller/bestseller.phtml
+new file mode 100644
+index 0000000..14dac25
+--- /dev/null
++++ b/app/design/frontend/default/store/template/bestseller/bestseller.phtml
+@@ -0,0 +1,70 @@
++<?php $products  = $this->getBestsellerProducts(); ?>
++<?php $category  = Mage::registry('current_category') ?>
++<?php $isEnabled = $category->getData('bestseller_enabled'); ?>
++
++<?php if ($products->count() > 2 && $isEnabled): ?>
++<div class="products bestseller-container clearfix">
++    <?php $catalogHelper = Mage::helper('Developer_catalog'); ?>
++
++    <h2 class="bestseller-head">
++        <?php echo $this->__('Bestsellers') ?>
++    </h2>
++
++    <ul class="slides">
++        <?php $_iterator = 0; ?>
++        <?php $ids = Array(); ?>
++        <?php foreach ($products as $_product): ?>
++            <?php $_product = Mage::getModel('catalog/product')->load($_product->getId()); ?>
++            <?php $_status = $_product->getAttributeText('product_status') ?>
++            <li class="single-product-block">
++                <?php echo $this->getLayout()->createBlock('core/template')->setTemplate('catalog/product/list/addtowishlist.phtml')->setData('product',$_product)->toHtml()?>
++                <?php
++                if (is_array($_status)) {
++                    foreach(explode(',' , $category['no_display_labels']) as $val) {
++                        $key = array_search($val, $_status);
++                        if (false !== $key) {
++                            unset($_status[$key]);
++                        }
++                    }
++                    $count = sizeof($_status);
++                    echo $count ? '<span class="labels-container">' : '';
++                    $format = '<span class="product-status %s">%s </span>';
++                    foreach ($_status as $statusLabel) {
++                        printf($format, $catalogHelper->slugify($statusLabel), $statusLabel);
++                    }
++                    echo $count ? '</span>' : '';
++                }
++                else if ($_status) {
++                    $no_display_labels = explode(',' , $category['no_display_labels']);
++                    if(!in_array($_status, $no_display_labels)) {
++                        $format =  '<span class="labels-container"><span class="product-status %s">%s </span></span>';
++                        printf($format, $catalogHelper->slugify($_status), $_status);
++                    }
++                }
++                ?>
++                <figure>
++                    <a href="<?=$_product->getProductUrl() ?>">
++                        <div class="overlay"></div>
++                        <img
++                            src="<?php echo $this->helper('catalog/image')->init($_product, 'small_image')->resize(160)?>"
++                            alt="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>"/>
++                    </a>
++                </figure>
++                <div class="info">
++                    <h3><a href="<?=$_product->getProductUrl() ?>"><?=$this->escapeHtml($_product->getName()) ?></a></h3>
++                    <p><?php echo $_product->getAttributeText('manufacturer')?></p>
++                    <?=$this->getLayout()->createBlock('core/template')->setTemplate('catalog/product/list/price.phtml')->setData('product',$_product)->toHtml()?>
++                    <?php if(Mage::app()->getStore()->getCode() != 'en' && Mage::app()->getStore()->getCode() != 'bg') : ?>
++                        <?php if ($_product->isSaleable()): ?>
++                            <a href="<?php echo $this->helper('checkout/cart')->getAddUrl($_product) ?>" class="add-to-cart"></a>
++                        <?php endif; ?>
++                    <?php endif; ?>
++                </div>
++            </li>
++            <?php
++            array_push($ids, $_product->getSku());
++            ?>
++        <?php endforeach; ?>
++    </ul>
++</div>
++<?php endif; ?>
+diff --git a/app/design/frontend/default/store/template/catalog/product/list.phtml b/app/design/frontend/default/store/template/catalog/product/list.phtml
+index 8bd0c45..94d1091 100644
+--- a/app/design/frontend/default/store/template/catalog/product/list.phtml
++++ b/app/design/frontend/default/store/template/catalog/product/list.phtml
+@@ -79,0 +80 @@ $catalogHelper = Mage::helper('Developer_catalog');
++<?php else: ?>
+@@ -80,0 +82 @@ $catalogHelper = Mage::helper('Developer_catalog');
++    <?php echo $this->getChildHtml('Dev_bestseller') ?>
+@@ -82 +83,0 @@ $catalogHelper = Mage::helper('Developer_catalog');
+-<?php else: ?>
+diff --git a/app/design/frontend/default/store/template/home/categoriespanel.phtml b/app/design/frontend/default/store/template/home/categoriespanel.phtml
+index 5e11537..c99a596 100644
+--- a/app/design/frontend/default/store/template/home/categoriespanel.phtml
++++ b/app/design/frontend/default/store/template/home/categoriespanel.phtml
+@@ -13 +13 @@ $panelCategories = $this->getPanelCategories();
+-    <h2><?php echo $this->__('Polecane kategorie'); ?></h2>
++    <h2><?php echo $this->__('Recommended categories'); ?></h2>
+diff --git a/app/etc/modules/Dev_Bestseller.xml b/app/etc/modules/Dev_Bestseller.xml
+new file mode 100644
+index 0000000..2c41d50
+--- /dev/null
++++ b/app/etc/modules/Dev_Bestseller.xml
+@@ -0,0 +1,9 @@
++<?xml version="1.0"?>
++<config>
++    <modules>
++        <Dev_Bestseller>
++            <active>true</active>
++            <codePool>local</codePool>
++        </Dev_Bestseller>
++    </modules>
++</config>
+\ No newline at end of file
+diff --git a/shell/bestsellers.php b/shell/bestsellers.php
+new file mode 100644
+index 0000000..406c420
+--- /dev/null
++++ b/shell/bestsellers.php
+@@ -0,0 +1,41 @@
++<?php
++/**
++ * Created by PhpStorm.
++ * User: aleksander laurowski
++ * Date: 2014-10-27
++ * Time: 08:50
++ */
++
++require_once 'abstract.php';
++
++class Dev_Shell_Bestsellers extends Mage_Shell_Abstract
++{
++
++    /**
++     * Set categories' attribute 'bestseller_enabled' to '1';
++     * @return bool
++     */
++    public function run()
++    {
++        $startTime  = microtime(true);
++        $resource   = Mage::getResourceModel('catalog/category');
++        $categories = Mage::getModel('catalog/category')
++            ->getCollection()
++            ->addAttributeToSelect(array('id', 'name', 'bestseller_enabled'))
++            ->addIsActiveFilter();
++
++        $i = 0;
++        foreach($categories as $category) {
++            $category->setStoreId(0);    // 0 = All Store Views
++            $category->setData('bestseller_enabled', '1');
++            $resource->saveAttribute($category, 'bestseller_enabled');
++            Mage::log("[".$i++."] Category: #" . $category->getId() . " | " . $category->getName() . " done.", null, 'bestsellers.log');
++        }
++        Mage::log("Time: " . (microtime(true) - $startTime) . " seconds.", null, 'bestsellers.log');
++        return false;
++    }
++
++}
++
++$shell = new Dev_Shell_Bestsellers();
++$shell->run();
+\ No newline at end of file
+diff --git a/skin/frontend/default/store/css/main.css b/skin/frontend/default/store/css/main.css
+index 22913db..867a10d 100644
+--- a/skin/frontend/default/store/css/main.css
++++ b/skin/frontend/default/store/css/main.css
+@@ -66,0 +67,2 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, menu,
++.bestseller-container .flex-prev,
++.bestseller-container .flex-next,
+@@ -898,0 +901 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, menu,
++.bestseller-container .flex-prev,
+@@ -905,0 +909 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, menu,
++.bestseller-container .flex-next,
+@@ -1800,0 +1805,3 @@ body #popupdiv #innerdiv #dontShowMessage {
++    .bestseller-container {
++        display: none;
++    }
+@@ -2085 +2092 @@ body #popupdiv #innerdiv #dontShowMessage {
+-    
++
+@@ -5251,0 +5259 @@ p.warning {
++.bestseller-container .flex-prev,
+@@ -5259,0 +5268 @@ p.warning {
++.bestseller-container .flex-next,
+@@ -5267,0 +5277 @@ p.warning {
++.bestseller-container .flex-disabled,
+@@ -5809,0 +5820 @@ p.warning {
++    .bestseller-container .flex-next,
+@@ -5814,0 +5826 @@ p.warning {
++  .bestseller-container .flex-prev,
+@@ -8964,0 +8977,11 @@ sub {
++.bestseller-container {
++    position: relative;
++    padding-bottom: 20px;
++    margin-bottom: 20px;
++    border-bottom: 1px solid #D0CECF;
++}
++.bestseller-head {
++    font-size: 27px;
++    font-family: "HelveticaNeueLTPro-Lt";
++    padding: 3px 0 20px 20px;
++}
+@@ -9626 +9649 @@ sub {
+-  
++
+@@ -9679,0 +9703 @@ sub {
++  .bestseller-head,
+@@ -9691,0 +9716,4 @@ sub {
++  .bestseller-head {
++      padding-left: 10px;
++      font-size: 16px;
++  }
+diff --git a/skin/frontend/default/store/js/main.js b/skin/frontend/default/store/js/main.js
+index 41c65f8..0555fe5 100644
+--- a/skin/frontend/default/store/js/main.js
++++ b/skin/frontend/default/store/js/main.js
+@@ -39,0 +40 @@ jQuery(document).ready(function ($) {
++            store.fBestsellersFancyBox();
+@@ -453,0 +455,12 @@ jQuery(document).ready(function ($) {
++        fBestsellersFancyBox: function(){
++            jQuery('.products.bestseller-container').flexslider({
++                animation: "slide",
++                controlNav: false,
++                animationLoop: false,
++                directionNav: true,
++                slideshow: false,
++                minItems: 3,
++                itemWidth: 296
++            });
++        },
++
