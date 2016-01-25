@@ -30,11 +30,11 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         content =
           """**SonarQube Analysis**
             |
-            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
+            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) **BLOCKER**: Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
         line = Some(23),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")))
       reviewCommentsCreator.createOrUpdateComments(pullRequest, existingReviewComments, pullRequestResults)
@@ -44,11 +44,11 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
+            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) **BLOCKER**: Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
         line = Some(23),
         filePath = Some(
           "multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")
@@ -63,7 +63,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         content =
           """**SonarQube Analysis**
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)""".stripMargin,
         line = Some(23),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")))
       reviewCommentsCreator.createOrUpdateComments(pullRequest, existingReviewComments, pullRequestResults)
@@ -74,11 +74,11 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
+            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) **BLOCKER**: Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin
       )
     }
 
@@ -92,11 +92,11 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
+            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) **BLOCKER**: Catch Exception instead of Throwable. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1181)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
         line = Some(23),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")
       )
@@ -106,11 +106,11 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
         line = Some(14),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")
       )
@@ -120,7 +120,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
         line = Some(22),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")
       )
@@ -131,7 +131,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
         line = Some(13),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")
       )
@@ -141,7 +141,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Replace this usage of System.out or System.err by a logger. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS106)""".stripMargin,
+            |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Replace this usage of System.out or System.err by a logger. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS106)""".stripMargin,
         line = Some(16),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")
       )
@@ -151,7 +151,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
         message =
           """**SonarQube Analysis**
             |
-            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) Remove this "Double.longBitsToDouble" call. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS2127)""".stripMargin,
+            |![BLOCKER](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/BLOCKER.png) **BLOCKER**: Remove this "Double.longBitsToDouble" call. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS2127)""".stripMargin,
         line = Some(12),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")
       )

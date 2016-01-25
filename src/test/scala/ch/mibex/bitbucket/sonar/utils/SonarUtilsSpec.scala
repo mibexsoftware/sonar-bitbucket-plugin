@@ -75,7 +75,7 @@ class SonarUtilsSpec extends Specification with Mockito {
       settings.getString(CoreProperties.SERVER_BASE_URL) returns "http://localhost:9000"
       SonarUtils.renderAsMarkdown(issue, settings) must_==
         """![INFO](https://raw.githubusercontent.com/mibexsoftware/
-          |sonar-bitbucket-plugin/master/src/main/resources/images/severity/INFO.png) Either remove
+          |sonar-bitbucket-plugin/master/src/main/resources/images/severity/INFO.png) **INFO**: Either remove
           | or fill this block of code. [[Details]](http://localhost:9000/
           |coding_rules#rule_key=squid%3AS00108)""".stripMargin.replaceAll("\n", "")
     }
@@ -90,7 +90,7 @@ class SonarUtilsSpec extends Specification with Mockito {
       settings.getString("sonar.host.url") returns "http://mysonar"
       SonarUtils.renderAsMarkdown(issue, settings) must_==
         """![MAJOR](https://raw.githubusercontent.com/mibexsoftware/
-          |sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) Check that null is not used
+          |sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Check that null is not used
           | [[Details]](http://mysonar/coding_rules#rule_key=Scalastyle%3Aorg.scalastyle.scalariform.NullChecker)"""
           .stripMargin.replaceAll("\n", "")
     }

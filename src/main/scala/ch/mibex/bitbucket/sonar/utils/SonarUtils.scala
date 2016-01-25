@@ -34,8 +34,9 @@ object SonarUtils {
   def renderAsMarkdown(issue: Issue, settings: Settings): String = {
     val ruleLink = getRuleLink(issue.ruleKey(), settings)
     val sb = new mutable.StringBuilder()
-    sb.append(toImageMarkdown(issue.severity()))
-      .append(" ")
+    val severity = issue.severity()
+    sb.append(toImageMarkdown(severity))
+      .append(s" **$severity**: ")
       .append(issue.message())
       .append(" ")
       .append(ruleLink)
