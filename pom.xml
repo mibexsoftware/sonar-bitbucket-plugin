@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ch.mibex.bitbucket</groupId>
     <artifactId>sonar-bitbucket-plugin</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <packaging>sonar-plugin</packaging>
     <name>Sonar Bitbucket Cloud Plugin</name>
 

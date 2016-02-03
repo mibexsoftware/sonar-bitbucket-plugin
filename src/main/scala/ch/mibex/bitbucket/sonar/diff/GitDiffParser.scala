@@ -20,7 +20,7 @@ object GitDiffParser extends RegexParsers {
   case class DissimilarityIndex(percentage: Int) extends HeaderLine
   case class Index(fromHash: String, toHash: String, mode: Option[Int] = None) extends HeaderLine
 
-  case class ExtendedDiffHeader(headerLines: Seq[HeaderLine], index: Index)
+  case class ExtendedDiffHeader(headerLines: Seq[HeaderLine], index: Option[Index])
 
   case class FileChange(oldFile: String, newFile: String)
 
@@ -112,7 +112,7 @@ object GitDiffParser extends RegexParsers {
         oldMode | newMode | deletedFileMode | newFileMode
       | copyFrom | copyTo | renameFrom | renameTo
       | similarityIndex | dissimilarityIndex
-    ) ~ index ^^
+    ) ~ opt(index) ^^
       { case lines ~ i => ExtendedDiffHeader(lines, i) }
 
   //  --- a/builtin-http-fetch.c

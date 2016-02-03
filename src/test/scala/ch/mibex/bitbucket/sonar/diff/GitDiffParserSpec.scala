@@ -1,5 +1,6 @@
 package ch.mibex.bitbucket.sonar.diff
 
+import ch.mibex.bitbucket.sonar.diff.GitDiffParser._
 import ch.mibex.bitbucket.sonar.utils.StringUtils
 import org.junit.runner.RunWith
 import org.specs2.matcher.{ParserMatchers, StringMatchers}
@@ -126,12 +127,12 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
           |""".stripMargin).withResult(
         ExtendedDiffHeader(
           headerLines = List(SimilarityIndex(95), RenameFrom("builtin-http-fetch.c"), RenameTo("http-fetch.c")),
-          index = Index(fromHash = "f3e63d7", toHash = "e8f44ba", mode = Some(100644))
+          index = Option(Index(fromHash = "f3e63d7", toHash = "e8f44ba", mode = Some(100644)))
         )
       )
       extendedDiffHeader must succeedOn("index f3e63d7..e8f44ba 100644\n").withResult(
         ExtendedDiffHeader(headerLines = List(),
-          index = Index(fromHash = "f3e63d7", toHash = "e8f44ba", mode = Some(100644)))
+          index = Option(Index(fromHash = "f3e63d7", toHash = "e8f44ba", mode = Some(100644))))
       )
       index must failOn("")
     }
@@ -283,7 +284,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
           ),
           header = ExtendedDiffHeader(
             headerLines = List(SimilarityIndex(percentage = 95)),
-            index = Index(fromHash = "57b70a8", toHash = "fc8f0d5", mode = Option(100755))),
+            index = Option(Index(fromHash = "57b70a8", toHash = "fc8f0d5", mode = Option(100755)))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
               fromToRange = FromToRange(fromLineStart = 12, fromNumLines = 0, toLineStart = 12, toNumLines = 0),
@@ -379,7 +380,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
           ),
           header = ExtendedDiffHeader(
             headerLines = List(DeletedFileMode(mode = 100755)),
-            index = Index(fromHash = "4545ecc", toHash = "0000000", mode = None)),
+            index = Option(Index(fromHash = "4545ecc", toHash = "0000000", mode = None))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
               fromToRange = FromToRange(fromLineStart = 1, fromNumLines = 40, toLineStart = 0, toNumLines = 0),
@@ -460,7 +461,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
           ),
           header = ExtendedDiffHeader(
             headerLines = List(),
-            index = Index(fromHash = "356f4b7", toHash = "f5b8743", mode = Some(100755))),
+            index = Option(Index(fromHash = "356f4b7", toHash = "f5b8743", mode = Some(100755)))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
               fromToRange = FromToRange(fromLineStart = 26, fromNumLines = 2, toLineStart = 26, toNumLines = 2),
@@ -530,7 +531,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
               RenameFrom("builtin-http-fetch.c"),
               RenameTo("http-fetch.c")
             ),
-            index = Index(fromHash = "f3e63d7", toHash = "e8f44ba", mode = Some(100644))),
+            index = Option(Index(fromHash = "f3e63d7", toHash = "e8f44ba", mode = Some(100644)))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
               fromToRange = FromToRange(fromLineStart = 1, fromNumLines = 8, toLineStart = 1, toNumLines = 9),
@@ -593,12 +594,45 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
       allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong3.txt"))
     }
 
+    "Github issue #8 wrong example 4" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong4.txt"))
+    }
+
+    "Github issue #10" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/failing-diff2.txt"))
+    }
+
+    "Github issue #8 failing diff" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/failing-diff.txt")).withResult(
+        List(
+          GitDiff(
+            FileChange("dev/bin/custom/connector/project.properties",
+                       "dev/bin/custom/connector/project.properties"),
+            ExtendedDiffHeader(List(NewFileMode(100644)), Option(Index("0000000", "a244253", None))),
+            List(
+              Hunk(
+                HunkHeader(FromToRange(0, 0, 1, 5), None),
+                List(
+                  AddedLine(""),
+                  AddedLine("lorealprotogoconnector.key=value"),
+                  AddedLine(""),
+                  AddedLine("# Specifies the location of the spring context file"),
+                  AddedLine("connector.application-context=connector-spring.xml"),
+                  CtxLine("\\ No newline at end of file")
+                )
+              )
+            )
+          )
+        )
+      )
+    }
+
     "parse PR140 with multiple diffs successfully" in {
       allDiffs must succeedOn(StringUtils.readFile("/diffs/PR140.diff")).withResult(
         List(
           GitDiff(
             gitDiffHeader = FileChange("app/DataTransferObjects/Menu/Category/CategoryDTO.php", "app/DataTransferObjects/Menu/Category/CategoryDTO.php"),
-            header = ExtendedDiffHeader(List(DeletedFileMode(100644)), Index("27e8967", "0000000", None)),
+            header = ExtendedDiffHeader(List(DeletedFileMode(100644)), Option(Index("27e8967", "0000000", None))),
             hunks = List(
               Hunk(
                 HunkHeader(FromToRange(1, 42, 0, 0), None),
@@ -653,7 +687,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
           GitDiff(
             FileChange("public/vendor/swaggervel/fonts/droid-sans-v6-latin-700.svg", "public/vendor/swaggervel/fonts/droid-sans-v6-latin-700.svg"),
             ExtendedDiffHeader(
-              List(NewFileMode(100644)),Index("0000000","a54bbbb",None)
+              List(NewFileMode(100644)),Option(Index("0000000","a54bbbb",None))
             ),
             List(
               Hunk(
