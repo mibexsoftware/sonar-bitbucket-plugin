@@ -1,0 +1,21 @@
+diff --git a/gradle/wrapper/gradle-wrapper.properties b/gradle/wrapper/gradle-wrapper.properties
+index d4fcdc1..d221f9c 100644
+--- a/gradle/wrapper/gradle-wrapper.properties
++++ b/gradle/wrapper/gradle-wrapper.properties
+@@ -1 +1 @@
+-#Sun Aug 24 18:28:49 CDT 2014
++#Sun Jan 17 19:01:08 CET 2016
+@@ -6 +6 @@ zipStorePath=wrapper/dists
+-distributionUrl=http\://services.gradle.org/distributions/gradle-2.0-bin.zip
++distributionUrl=http\://services.gradle.org/distributions/gradle-2.10-all.zip
+diff --git a/gradlew b/gradlew
+old mode 100644
+new mode 100755
+diff --git a/src/main/java/com/blockout/Loader.java b/src/main/java/com/blockout/Loader.java
+index f1df8eb..6354e2d 100644
+--- a/src/main/java/com/blockout/Loader.java
++++ b/src/main/java/com/blockout/Loader.java
+@@ -95,2 +95 @@ public class Loader
+-                Pane pane = (Pane)constructor.newInstance(params);
+-                return pane;
++                return constructor.newInstance(params);

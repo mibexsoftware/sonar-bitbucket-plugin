@@ -598,8 +598,8 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
       allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong4.txt"))
     }
 
-    "Github issue #10" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/failing-diff2.txt"))
+    "Github issue #10 no index existing" in {
+      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#10-no-index.txt"))
     }
 
     "Github issue #8 failing diff" in {

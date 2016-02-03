@@ -1,0 +1,12 @@
+diff --git a/dev/bin/custom/connector/project.properties b/dev/bin/custom/connector/project.properties
+new file mode 100644
+index 0000000..a244253
+--- /dev/null
++++ b/dev/bin/custom/connector/project.properties
+@@ -0,0 +1,5 @@
++
++lorealprotogoconnector.key=value
++
++# Specifies the location of the spring context file
++connector.application-context=connector-spring.xml
+\ No newline at end of file

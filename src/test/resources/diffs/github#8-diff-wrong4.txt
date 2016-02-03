@@ -1,0 +1,59 @@
+diff --git a/app/design/frontend/fwc/default/template/checkout/cart/sidebar.phtml b/app/design/frontend/fwc/default/template/checkout/cart/sidebar.phtml
+index 4a50ddc..032b9c5 100755
+--- a/app/design/frontend/fwc/default/template/checkout/cart/sidebar.phtml
++++ b/app/design/frontend/fwc/default/template/checkout/cart/sidebar.phtml
+@@ -62,2 +61,0 @@
+-                //$session= Mage::getSingleton('checkout/session');
+-                //$_items = $session->getQuote()->getAllItems();
+@@ -86,10 +84,10 @@
+-                    <?php if (Mage::getSingleton('checkout/session')->getQuote()->getCouponCode()): ?>
+-                        <div class="cupon ">
+-                        <span class="title col-xs-6">
+-                            <?php echo $this->__('Discount amount'); ?>
+-                        </span>
+-                        <span class="code col-xs-6 text-right">
+-                            <?php echo $this->__('-'); ?>
+-                            <?php $discount =  Mage::getSingleton('checkout/session')->getQuote()->getSubtotal() - Mage::getSingleton('checkout/session')->getQuote()->getSubtotalWithDiscount() ?>
+-                            {{<?php  echo $discount ?>| currency }}
+-                        </span>
++                    <?php $discount = Mage::getSingleton('checkout/session')->getQuote()->getSubtotal() - Mage::getSingleton('checkout/session')->getQuote()->getSubtotalWithDiscount() ?>
++                    <?php if ($discount > 0): ?>
++                        <div class="cupon">
++                            <span class="title col-xs-6">
++                                <?php echo $this->__('Discount amount'); ?>
++                            </span>
++                            <span class="code col-xs-6 text-right">
++                                <?php echo $this->__('-'); ?>
++                                {{<?php echo $discount ?>| currency }}
++                            </span>
+@@ -97 +95 @@
+-                    <?php endif; ?>
++                    <?php endif ?>
+diff --git a/skin/frontend/fwc/default/css/styles.css b/skin/frontend/fwc/default/css/styles.css
+index 9427549..abc40a2 100755
+--- a/skin/frontend/fwc/default/css/styles.css
++++ b/skin/frontend/fwc/default/css/styles.css
+@@ -1122 +1122,2 @@ This must be run when you have at least 2 sprites.
+-  height: 100%;
++  height: calc(100% - 85px);
++  height: -moz-calc(100% - 85px);
+diff --git a/skin/frontend/fwc/default/less/theme/_base.less b/skin/frontend/fwc/default/less/theme/_base.less
+index 19fd579..3b9b238 100755
+--- a/skin/frontend/fwc/default/less/theme/_base.less
++++ b/skin/frontend/fwc/default/less/theme/_base.less
+@@ -621,2 +621,5 @@ div.mage-error:empty , p.mage-error:empty , .error:empty ,.validation-advice:emp
+-
+-
++.calc-height(@attribute) {
++    height: calc(@attribute);
++    height: -webkit-calc(@attribute);
++    height: -moz-calc(@attribute);
++}
+\ No newline at end of file
+diff --git a/skin/frontend/fwc/default/less/theme/_sidebar.less b/skin/frontend/fwc/default/less/theme/_sidebar.less
+index dfb8271..e0e6f5e 100755
+--- a/skin/frontend/fwc/default/less/theme/_sidebar.less
++++ b/skin/frontend/fwc/default/less/theme/_sidebar.less
+@@ -112 +112 @@
+-        height: 100%;
++        .calc-height(~'100% - 85px');
