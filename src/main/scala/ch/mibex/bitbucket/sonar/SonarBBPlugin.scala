@@ -24,6 +24,7 @@ object SonarBBPlugin {
   final val SonarQubeMinSeverity = "sonar.bitbucket.minSeverity"
   final val BitbucketOAuthClientKey = "sonar.bitbucket.oauthClientKey"
   final val BitbucketOAuthClientSecret = "sonar.bitbucket.oauthClientSecret"
+  final val BitbucketApproveUnapprove = "sonar.bitbucket.approvalFeatureEnabled"
 }
 
 
@@ -95,6 +96,14 @@ object SonarBBPlugin {
       defaultValue = Severity.MAJOR, // we cannot use default Sonar#defaultSeverity here as this is not a constant value
       description = "Use either INFO, MINOR, MAJOR, CRITICAL or BLOCKER to only have pull request comments " +
         "created for issues with severities greater or equal to this one.",
+      global = false
+    ),
+    new Property(
+      key = SonarBBPlugin.BitbucketApproveUnapprove,
+      name = "Approve / Unapprove pull request if there are critical or blocker issues.",
+      defaultValue = "true",
+      description = "If enabled, the plug-in will approve the pull request if there are no critical and no " +
+        "blocker issues, otherwise it will unapprove the pull request.",
       global = false
     )
   )

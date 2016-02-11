@@ -22,7 +22,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
       deleteOutdatedComments(p, commentsToDelete)
       deletePreviousGlobalComments(p, ourComments)
       createGlobalComment(p, report)
-      approveOrUnapprove(p, report)
+      approveOrUnapproveIfEnabled(p, report)
     }
   }
 
@@ -42,11 +42,13 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
     pullRequests
   }
 
-  private def approveOrUnapprove(pullRequest: PullRequest, report: PullRequestReviewResults) {
-    if (report.canBeApproved) {
-      bitbucketClient.approve(pullRequest)
-    } else {
-      bitbucketClient.unApprove(pullRequest)
+  private def approveOrUnapproveIfEnabled(pullRequest: PullRequest, report: PullRequestReviewResults) {
+    if (pluginConfig.approveUnApproveEnabled()) {
+      if (report.canBeApproved) {
+        bitbucketClient.approve(pullRequest)
+      } else {
+        bitbucketClient.unApprove(pullRequest)
+      }
     }
   }
 

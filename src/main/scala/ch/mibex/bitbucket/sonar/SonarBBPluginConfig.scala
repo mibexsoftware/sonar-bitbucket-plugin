@@ -38,6 +38,9 @@ class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchCompo
   def minSeverity(): String =
     settings.getString(SonarBBPlugin.SonarQubeMinSeverity)
 
+  def approveUnApproveEnabled(): Boolean =
+    settings.getBoolean(SonarBBPlugin.BitbucketApproveUnapprove)
+
   def branchName(): String = {
     var branchName = settings.getString(SonarBBPlugin.BitbucketBranchName)
     Option(branchName) foreach { _ =>
@@ -93,6 +96,7 @@ class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchCompo
         |oauthTokenClientKey=${Option(oauthTokenClientKey()).flatMap(s => Option("***")).orNull},
         |oauthTokenClientSecret=${Option(oauthTokenClientSecret()).flatMap(s => Option("***")).orNull},
         |branchName=${branchName()},
+        |approveUnApproveEnabled=${approveUnApproveEnabled()},
         |minSeverity=${minSeverity()})""".stripMargin.replaceAll("\n", "")
 
 }

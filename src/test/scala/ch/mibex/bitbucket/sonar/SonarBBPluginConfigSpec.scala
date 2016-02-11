@@ -77,6 +77,20 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       pluginConfig.oauthTokenClientSecret() must_== "xxxxxxxxx"
     }
 
+    "have approval/unapproval activated by default" in new SettingsContext {
+      pluginConfig.approveUnApproveEnabled() must beTrue
+    }
+
+    "yield approval/unapproval true setting if enabled" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketApproveUnapprove, "true")
+      pluginConfig.approveUnApproveEnabled() must beTrue
+    }
+
+    "yield approval/unapproval false setting if disabled" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketApproveUnapprove, "false")
+      pluginConfig.approveUnApproveEnabled() must beFalse
+    }
+
   }
 
   "plug-in configuration validation" should {
