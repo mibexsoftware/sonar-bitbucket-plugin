@@ -12,13 +12,4 @@ object StringUtils {
     if (n > 1) plural else singular
   }
 
-  def readFile(path: String): String = {
-    val is = scala.io.Source.fromInputStream(getClass.getResourceAsStream(path))
-    try {
-      is.getLines().mkString("\n")
-    } finally {
-      is.close()
-    }
-  }
-
 }

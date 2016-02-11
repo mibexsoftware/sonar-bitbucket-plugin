@@ -1,0 +1,198 @@
+diff --git a/app/code/local/Adc/Checkout/Model/Type/Onepage.php b/app/code/local/Adc/Checkout/Model/Type/Onepage.php
+index 5b66fbe..8524b9a 100644
+--- a/app/code/local/Adc/Checkout/Model/Type/Onepage.php
++++ b/app/code/local/Adc/Checkout/Model/Type/Onepage.php
+@@ -215,0 +216,6 @@ class Adc_Checkout_Model_Type_Onepage extends Mage_Checkout_Model_Type_Onepage
++        
++        // Additional adress errors checking
++        $customAddressErrors = Mage::helper('adc_customer')->validateAddress($address);
++        if ($customAddressErrors !== true) {
++            return array('error' => 1, 'message' => current($customAddressErrors));
++        }
+@@ -285,0 +292,80 @@ class Adc_Checkout_Model_Type_Onepage extends Mage_Checkout_Model_Type_Onepage
++     * Save checkout shipping address
++     *
++     * @param   array $data
++     * @param   int $customerAddressId
++     * @return  Mage_Checkout_Model_Type_Onepage
++     */
++    public function saveShipping($data, $customerAddressId)
++    {
++        if (empty($data)) {
++            return array('error' => -1, 'message' => Mage::helper('checkout')->__('Invalid data.'));
++        }
++        $address = $this->getQuote()->getShippingAddress();
++
++        /* @var $addressForm Mage_Customer_Model_Form */
++        $addressForm    = Mage::getModel('customer/form');
++        $addressForm->setFormCode('customer_address_edit')
++            ->setEntityType('customer_address')
++            ->setIsAjaxRequest(Mage::app()->getRequest()->isAjax());
++
++        if (!empty($customerAddressId)) {
++            $customerAddress = Mage::getModel('customer/address')->load($customerAddressId);
++            if ($customerAddress->getId()) {
++                if ($customerAddress->getCustomerId() != $this->getQuote()->getCustomerId()) {
++                    return array('error' => 1,
++                        'message' => Mage::helper('checkout')->__('Customer Address is not valid.')
++                    );
++                }
++
++                $address->importCustomerAddress($customerAddress)->setSaveInAddressBook(0);
++                $addressForm->setEntity($address);
++                $addressErrors  = $addressForm->validateData($address->getData());
++                if ($addressErrors !== true) {
++                    return array('error' => 1, 'message' => $addressErrors);
++                }
++            }
++        } else {
++            $addressForm->setEntity($address);
++            // emulate request object
++            $addressData    = $addressForm->extractData($addressForm->prepareRequest($data));
++            $addressErrors  = $addressForm->validateData($addressData);
++            if ($addressErrors !== true) {
++                return array('error' => 1, 'message' => $addressErrors);
++            }
++            $addressForm->compactData($addressData);
++            // unset shipping address attributes which were not shown in form
++            foreach ($addressForm->getAttributes() as $attribute) {
++                if (!isset($data[$attribute->getAttributeCode()])) {
++                    $address->setData($attribute->getAttributeCode(), NULL);
++                }
++            }
++
++            $address->setCustomerAddressId(null);
++            // Additional form data, not fetched by extractData (as it fetches only attributes)
++            $address->setSaveInAddressBook(empty($data['save_in_address_book']) ? 0 : 1);
++            $address->setSameAsBilling(empty($data['same_as_billing']) ? 0 : 1);
++        }
++
++        $address->implodeStreetAddress();
++        $address->setCollectShippingRates(true);
++
++        if (($validateRes = $address->validate())!==true) {
++            return array('error' => 1, 'message' => $validateRes);
++        }
++
++        // Additional adress errors checking
++        $customAddressErrors = Mage::helper('adc_customer')->validateAddress($address);
++        if ($customAddressErrors !== true) {
++            return array('error' => 1, 'message' => current($customAddressErrors));
++        }
++
++        $this->getQuote()->collectTotals()->save();
++
++        $this->getCheckout()
++            ->setStepData('shipping', 'complete', true)
++            ->setStepData('shipping_method', 'allow', true);
++
++        return array();
++    }
++    
++    /**
+diff --git a/app/code/local/Adc/Customer/Helper/Data.php b/app/code/local/Adc/Customer/Helper/Data.php
+index 95dfc7b..b902f31 100644
+--- a/app/code/local/Adc/Customer/Helper/Data.php
++++ b/app/code/local/Adc/Customer/Helper/Data.php
+@@ -36,2 +36,2 @@ class Adc_Customer_Helper_Data extends Mage_Customer_Helper_Data
+-    public function isAdministrator()
+-    {
++    public function isAdministrator()
++    {
+@@ -55,0 +56,21 @@ class Adc_Customer_Helper_Data extends Mage_Customer_Helper_Data
++    
++    /**
++     * Additional adress errors checking
++     * @param object $address
++     * @return array|boolean
++     */
++    public function validateAddress($address)
++    {
++        $store = Mage::app()->getStore();
++        
++        if($store->getCode() == 'it_IT') {
++            $street = strtolower($address->getStreet1(). ' ' . $address->getStreet2());
++            if(strpos($street, strtolower($address->getLastname())) && strpos($street, strtolower($address->getFirstname()))) {
++                $errorMessage = 'Gentile cliente, Il campo "Indirizzo" e "Nome" coincidono. Al fine di generare una fattura corretta la preghiamo di ricontrollare nuovamente i dati inseriti. Se i dati dovessero risultare corretti la preghiamo di confermarli cliccando sul tasto "confermo"';
++                return array($errorMessage);
++            }
++        }
++        
++        return true;
++    }
++    
+diff --git a/app/code/local/Adc/Customer/controllers/AddressController.php b/app/code/local/Adc/Customer/controllers/AddressController.php
+index 682ced4..5ce8f74 100755
+--- a/app/code/local/Adc/Customer/controllers/AddressController.php
++++ b/app/code/local/Adc/Customer/controllers/AddressController.php
+@@ -71,0 +72,70 @@ class Adc_Customer_AddressController extends Mage_Customer_AddressController
++    
++    public function formPostAction()
++    {
++        if (!$this->_validateFormKey()) {
++            return $this->_redirect('*/*/');
++        }
++        // Save data
++        if ($this->getRequest()->isPost()) {
++            $customer = $this->_getSession()->getCustomer();
++            /* @var $address Mage_Customer_Model_Address */
++            $address  = Mage::getModel('customer/address');
++            $addressId = $this->getRequest()->getParam('id');
++            if ($addressId) {
++                $existsAddress = $customer->getAddressById($addressId);
++                if ($existsAddress->getId() && $existsAddress->getCustomerId() == $customer->getId()) {
++                    $address->setId($existsAddress->getId());
++                }
++            }
++
++            $errors = array();
++
++            /* @var $addressForm Mage_Customer_Model_Form */
++            $addressForm = Mage::getModel('customer/form');
++            $addressForm->setFormCode('customer_address_edit')
++                ->setEntity($address);
++            $addressData    = $addressForm->extractData($this->getRequest());
++            $addressErrors  = $addressForm->validateData($addressData);
++            if ($addressErrors !== true) {
++                $errors = $addressErrors;
++            }
++
++            try {
++                $addressForm->compactData($addressData);
++                $address->setCustomerId($customer->getId())
++                    ->setIsDefaultBilling($this->getRequest()->getParam('default_billing', false))
++                    ->setIsDefaultShipping($this->getRequest()->getParam('default_shipping', false));
++
++                $addressErrors = $address->validate();               
++                if ($addressErrors !== true) {
++                    $errors = array_merge($errors, $addressErrors);
++                }
++                
++                // Additional adress errors checking
++                $customAddressErrors = Mage::helper('adc_customer')->validateAddress($address);
++                if ($customAddressErrors !== true) {
++                    $errors = array_merge($errors, $customAddressErrors);
++                }
++
++                if (count($errors) === 0) {
++                    $address->save();
++                    $this->_getSession()->addSuccess($this->__('The address has been saved.'));
++                    $this->_redirectSuccess(Mage::getUrl('*/*/index', array('_secure'=>true)));
++                    return;
++                } else {
++                    $this->_getSession()->setAddressFormData($this->getRequest()->getPost());
++                    foreach ($errors as $errorMessage) {
++                        $this->_getSession()->addError($errorMessage);
++                    }
++                }
++            } catch (Mage_Core_Exception $e) {
++                $this->_getSession()->setAddressFormData($this->getRequest()->getPost())
++                    ->addException($e, $e->getMessage());
++            } catch (Exception $e) {
++                $this->_getSession()->setAddressFormData($this->getRequest()->getPost())
++                    ->addException($e, $this->__('Cannot save address.'));
++            }
++        }
++
++        return $this->_redirectError(Mage::getUrl('*/*/edit', array('id' => $address->getId())));
++    }

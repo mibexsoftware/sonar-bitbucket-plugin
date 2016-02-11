@@ -1,7 +1,5 @@
 package ch.mibex.bitbucket.sonar.diff
 
-import ch.mibex.bitbucket.sonar.diff.GitDiffParser._
-import ch.mibex.bitbucket.sonar.utils.StringUtils
 import org.junit.runner.RunWith
 import org.specs2.matcher.{ParserMatchers, StringMatchers}
 import org.specs2.mutable.Specification
@@ -11,6 +9,9 @@ import org.specs2.runner.JUnitRunner
 class GitDiffParserSpec extends Specification with ParserMatchers with StringMatchers {
 
   import GitDiffParser._
+
+  private def readFile(path: String) =
+    scala.io.Source.fromInputStream(getClass.getResourceAsStream(path)).mkString
 
 
   "diff headers mode" should {
@@ -567,43 +568,47 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
     }
 
     "parse 2 diffs example successfully" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/2diffs-example.diff"))
+      allDiffs must succeedOn(readFile("/diffs/2diffs-example.diff"))
     }
 
     "parse 5 diffs example successfully" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/5diffs-example.diff"))
+      allDiffs must succeedOn(readFile("/diffs/5diffs-example.diff"))
     }
 
     "parse diff with u0085 new line character" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/u0085-char-issue.txt"))
+      allDiffs must succeedOn(readFile("/diffs/u0085-char-issue.txt"))
     }.pendingUntilFixed
 
     "Github issue #8" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8.txt"))
+      allDiffs must succeedOn(readFile("/diffs/github#8.txt"))
     }
 
     "Github issue #8 no newline at eof" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-no-newline-at-eof.txt"))
+      allDiffs must succeedOn(readFile("/diffs/github#8-no-newline-at-eof.txt"))
     }
 
     "Github issue #8 wrong example 1" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong1.txt"))
+      allDiffs must succeedOn(readFile("/diffs/github#8-diff-wrong1.txt"))
     }
 
     "Github issue #8 wrong example 3" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong3.txt"))
+      allDiffs must succeedOn(readFile("/diffs/github#8-diff-wrong3.txt"))
     }
 
     "Github issue #8 wrong example 4" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#8-diff-wrong4.txt"))
+      allDiffs must succeedOn(readFile("/diffs/github#8-diff-wrong4.txt"))
     }
 
     "Github issue #10 no index existing" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/github#10-no-index.txt"))
+      allDiffs must succeedOn(readFile("/diffs/github#10-no-index.txt"))
     }
-
+    
+    "Github issue #10 carriage return issue" in {
+      allDiffs must succeedOn(readFile("/diffs/diff_pr_153_ko.diff.txt"))
+    }
+    
     "Github issue #8 failing diff" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/failing-diff.txt")).withResult(
+      allDiffs must succeedOn(readFile("/diffs/failing-diff.txt")).withResult(
         List(
           GitDiff(
             FileChange("dev/bin/custom/connector/project.properties",
@@ -628,7 +633,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
     }
 
     "parse PR140 with multiple diffs successfully" in {
-      allDiffs must succeedOn(StringUtils.readFile("/diffs/PR140.diff")).withResult(
+      allDiffs must succeedOn(readFile("/diffs/PR140.diff")).withResult(
         List(
           GitDiff(
             gitDiffHeader = FileChange("app/DataTransferObjects/Menu/Category/CategoryDTO.php", "app/DataTransferObjects/Menu/Category/CategoryDTO.php"),

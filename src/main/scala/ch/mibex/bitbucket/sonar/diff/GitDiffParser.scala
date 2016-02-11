@@ -97,7 +97,7 @@ object GitDiffParser extends RegexParsers {
     case fh ~ th ~ optFm => Index(fh, th, optFm)
   }
 
-  def nl: Parser[String] = """\n""".r
+  def nl: Parser[String] = """(\r?\n)+""".r
 
   def fileMode: Parser[Int] = """[0-7]{6}""".r ^^ { _.toInt }
 

@@ -2,8 +2,6 @@ package ch.mibex.bitbucket.sonar.diff
 
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest}
-import ch.mibex.bitbucket.sonar.utils.StringUtils
-import com.ctc.wstx.util.StringUtil
 import org.junit.runner.RunWith
 import org.sonar.api.issue.Issue
 import org.sonar.api.rule.{RuleKey, Severity}
@@ -16,6 +14,9 @@ import org.specs2.specification.Scope
 class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
   val bitbucketClient = mock[BitbucketClient]
 
+  private def readFile(path: String) =
+    scala.io.Source.fromInputStream(getClass.getResourceAsStream(path)).mkString
+
   "filter" should {
 
     "only yield issues on changed lines in complex diff" in new ComplexIssueContext {
@@ -25,7 +26,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
         returns Option("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java"))
       (inputFileCache.resolveRepoRelativePath("ch.mycompany.test:gui:src/main/java/ch/mycompany/test/gui/StashTag.java")
         returns Option("multimod/src/gui/src/main/java/ch/mycompany/test/gui/StashTag.java"))
-      bitbucketClient.getPullRequestDiff(pullRequest) returns StringUtils.readFile("/diffs/5diffs-example.diff")
+      bitbucketClient.getPullRequestDiff(pullRequest) returns readFile("/diffs/5diffs-example.diff")
 
       val issuesOnChangedLinesFilter = new IssuesOnChangedLinesFilter(bitbucketClient, inputFileCache)
       val issuesNotOnChangedLines = Set(issue1, issue5, issue6, issue7)
@@ -38,7 +39,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
       val inputFileCache = mock[InputFileCache]
       (inputFileCache.resolveRepoRelativePath("com.company:sonar-bitbucket-test:src/main/java/com/company/sonar/bitbucket/SimpleClass.java")
         returns Option("src/main/java/com/company/sonar/bitbucket/SimpleClass.java"))
-      bitbucketClient.getPullRequestDiff(pullRequest) returns StringUtils.readFile("/diffs/2diffs-example.diff")
+      bitbucketClient.getPullRequestDiff(pullRequest) returns readFile("/diffs/2diffs-example.diff")
 
       val issuesOnChangedLinesFilter = new IssuesOnChangedLinesFilter(bitbucketClient, inputFileCache)
       val onlyIssuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, issues.toList)
