@@ -75,11 +75,14 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
     val newIssues = collectNewIssuesInProject()
     val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, newIssues)
     debugLogIssueStatistics(newIssues, issuesOnChangedLines)
+    val onlyIssuesWithMinSeverity = issuesOnChangedLines
+      .filter(i => SonarUtils.isSeverityGreaterOrEqual(i, pluginConfig.minSeverity()))
     val commentsToBeAdded = new mutable.HashMap[String, mutable.Map[Int, StringBuilder]]()
 
-    issuesOnChangedLines foreach { i =>
-      if (SonarUtils.isSeverityGreaterOrEqual(i, pluginConfig.minSeverity())) {
-        inputFileCache.resolveRepoRelativePath(i.componentKey()) foreach { repoRelPath =>
+    onlyIssuesWithMinSeverity foreach { i =>
+      inputFileCache.resolveRepoRelativePath(i.componentKey()) match {
+
+        case Some(repoRelPath) =>
           // file level comments do not have a line number! we use 0 for them here
           val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
 
@@ -92,7 +95,8 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
           }
 
           commentsToBeAdded(repoRelPath)(lineNr).append("\n\n" + SonarUtils.renderAsMarkdown(i, settings))
-        }
+        case None =>
+          logger.debug(LogUtils.f(s"No path resolved for ${i.componentKey()}"))
       }
 
       reviewResults.issueFound(i)
@@ -104,9 +108,13 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
   private def debugLogIssueStatistics(newIssues: Seq[Issue], issuesOnChangedLines: Seq[Issue]) {
     if (logger.isDebugEnabled) {
       logger.debug(LogUtils.f(s"Found ${newIssues.size} new issues:"))
-      newIssues foreach { i => logger.debug(LogUtils.f(s"  - $i")) }
+      newIssues foreach { i =>
+        logger.debug(LogUtils.f(s"  - ${i.componentKey()}:${i.line()}: ${i.message()}"))
+      }
       logger.debug(LogUtils.f(s"And ${issuesOnChangedLines.size} of these are on changed or new lines:"))
-      issuesOnChangedLines foreach { i => logger.debug(LogUtils.f(s"  + $i")) }
+      issuesOnChangedLines foreach { i =>
+        logger.debug(LogUtils.f(s"  + ${i.componentKey()}:${i.line()}: ${i.message()}"))
+      }
     }
   }
 
@@ -131,6 +139,9 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
   }
 
   private def collectNewIssuesInProject() =
+    // with sonar.analysis.mode=preview and sonar.analysis.mode=issues I always get all issues here
+    // although I only request new ones; this should be changed with SonarQube 5.4; until then, we still have to filter
+    // issues on changed lines only by using the diff from Bitbucket
     projectIssues
       .issues()
       .asScala

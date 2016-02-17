@@ -178,7 +178,7 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
       entity += "filename" -> f
       line match {
         case Some(l) if l > 0 =>
-          entity += "line_to" -> l
+          entity += "line_from" -> l
         case Some(l) if l == 0 =>
           // this is necessary for file-level pull request comments
           entity += "anchor" -> pullRequest.srcCommitHash
