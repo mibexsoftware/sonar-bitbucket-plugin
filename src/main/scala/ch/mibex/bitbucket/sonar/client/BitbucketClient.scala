@@ -178,7 +178,11 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
       entity += "filename" -> f
       line match {
         case Some(l) if l > 0 =>
-          entity += "line_from" -> l
+          // see https://bitbucket.org/site/master/issues/11925/post-a-new-comment-on-a-changeset-in-a:
+          // "commenting on a "green line" requires "line_to", a red line "line_from" and a white line should take
+          // either"; but for context (white) lines only line_from works for me
+          //TODO once the Bitbucket issue 11925 is resolved, this should also fix #17 on Github
+          entity += "line_to" -> l
         case Some(l) if l == 0 =>
           // this is necessary for file-level pull request comments
           entity += "anchor" -> pullRequest.srcCommitHash
