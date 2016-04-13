@@ -1,0 +1,7 @@
+diff --git a/app/code/local/Adc/Advisa/data/upgrade-1.0.12-1.0.13/fr_FR/terms-and-conditions.html b/app/code/local/Adc/Advisa/data/upgrade-1.0.12-1.0.13/fr_FR/terms-and-conditions.html
+new file mode 100644
+index 0000000..8b10dbd
+--- /dev/null
++++ b/app/code/local/Adc/Advisa/data/upgrade-1.0.12-1.0.13/fr_FR/terms-and-conditions.html
+@@ -0,0 +1,259 @@
++t   ABBOTT

@@ -1,0 +1,6 @@
+diff --git a/skin/frontend/adc/default/images/reimbursement/prescription image_Audi BKK.jpg b/skin/frontend/adc/default/images/reimbursement/prescription image_Audi BKK.jpg
+new file mode 100644
+index 0000000000000000000000000000000000000000..45e8602886f325a506424ed2c0444f2150c79a8b
+GIT binary patch
+literal 82397
+zcmeFa1yohr`Zv50kQ4*~K|#8^L4*xThjf<+h=71dm)pXi8_6vtx#_MgB3;r-cX!8*

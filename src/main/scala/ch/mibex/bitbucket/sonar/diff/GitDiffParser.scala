@@ -97,11 +97,11 @@ object GitDiffParser extends RegexParsers {
     case fh ~ th ~ optFm => Index(fh, th, optFm)
   }
 
-  def nl: Parser[String] = """(\r?\n)+""".r
+  def nl: Parser[String] = """[\n\r\f\u2028\u2029]+""".r // e.g., see http://www.fileformat.info/info/unicode/char/2028/index.htm
 
   def fileMode: Parser[Int] = """[0-7]{6}""".r ^^ { _.toInt }
 
-  def filePath: Parser[String] = """[\S]+""".r
+  def filePath: Parser[String] = """.+?(?=(\sb/)|(\r?\n))""".r
 
   def similarity: Parser[Int] = """\d{1,3}""".r ^^ { _.toInt }
 
@@ -153,10 +153,14 @@ object GitDiffParser extends RegexParsers {
   def num: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
   def parse(diff: String): Either[ParsingFailure, List[Diff]] = {
-    parseAll(allDiffs, diff) match {
+    parseAll(allDiffs, stripNelCharacters(diff)) match {
       case Success(s, _) => Right(s)
       case NoSuccess(msg, _) => Left(ParsingFailure(msg))
     }
   }
+
+  // a NEL character can occur inside a normal text line and would be interpreted as a NL
+  // this can cause problems in diff lines and should therefore be ignored
+  private def stripNelCharacters(diff: String) = diff.replaceAll("\u0085", "")
 
 }

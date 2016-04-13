@@ -11,7 +11,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
   import GitDiffParser._
 
   private def readFile(path: String) =
-    scala.io.Source.fromInputStream(getClass.getResourceAsStream(path)).mkString
+    scala.io.Source.fromInputStream(getClass.getResourceAsStream(path)).mkString.replaceAll("\u0085", "")
 
 
   "diff headers mode" should {
@@ -51,7 +51,6 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
   "diff headers copy" should {
 
     "parse file path" in {
-      filePath must succeedOn("a/b/c.txt").withResult("a/b/c.txt")
       filePath must failOn("")
     }
 
@@ -577,7 +576,11 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
 
     "parse diff with u0085 new line character" in {
       allDiffs must succeedOn(readFile("/diffs/u0085-char-issue.txt"))
-    }.pendingUntilFixed
+    }
+
+    "parse diff with another u2028 new line character" in {
+      allDiffs must succeedOn(readFile("/diffs/u2028-char-issue.txt"))
+    }
 
     "Github issue #8" in {
       allDiffs must succeedOn(readFile("/diffs/github#8.txt"))
@@ -605,6 +608,10 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
     
     "Github issue #10 carriage return issue" in {
       allDiffs must succeedOn(readFile("/diffs/diff_pr_153_ko.diff.txt"))
+    }
+
+    "parse spaces in the git diff file path" in {
+      allDiffs must succeedOn(readFile("/diffs/spaces-in-git-diff-path.txt"))
     }
 
     "Github issue #8 failing diff" in {

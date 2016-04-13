@@ -21,7 +21,6 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
     val issuesOnChangedLines = newIssues filter { i =>
       val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
 
-
       inputFileCache.resolveRepoRelativePath(i.componentKey()) match {
         case Some(filePath) =>
           val isIssueOnChangedLines = (diff: Diff) => diff match {
