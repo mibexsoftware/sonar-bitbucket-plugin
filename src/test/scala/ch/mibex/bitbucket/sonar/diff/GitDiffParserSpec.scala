@@ -177,7 +177,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
         "@@ -1,8 +1,9 @@")
         .withResult(
           HunkHeader(
-            fromToRange = FromToRange(fromLineStart = 1, fromNumLines = 8, toLineStart = 1, toNumLines = 9),
+            fromToRange = FromToRange(fromLineStart = 1, fromNumLines = Some(8), toLineStart = 1, toNumLines = Some(9)),
             context = None
           )
         )
@@ -188,7 +188,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
         "@@ -18,6 +19,8 @@ int cmd_http_fetch(int argc, const char **argv, const char *prefix)\n")
         .withResult(
           HunkHeader(
-            fromToRange = FromToRange(fromLineStart = 18, fromNumLines = 6, toLineStart = 19, toNumLines = 8),
+            fromToRange = FromToRange(fromLineStart = 18, fromNumLines = Some(6), toLineStart = 19, toNumLines = Some(8)),
             context = Some(CtxLine(line = "int cmd_http_fetch(int argc, const char **argv, const char *prefix)"))
           )
         )
@@ -288,7 +288,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             index = Option(Index(fromHash = "57b70a8", toHash = "fc8f0d5", mode = Option(100755)))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 12, fromNumLines = 0, toLineStart = 12, toNumLines = 0),
+              fromToRange = FromToRange(fromLineStart = 12, fromNumLines = None, toLineStart = 12, toNumLines = None),
               context = Some(CtxLine("public class App"))
             ),
             changedLines = List(
@@ -297,7 +297,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             )
           ), Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 16, fromNumLines = 0, toLineStart = 16, toNumLines = 0),
+              fromToRange = FromToRange(fromLineStart = 16, fromNumLines = None, toLineStart = 16, toNumLines = None),
               context = Some(CtxLine("public class App"))
             ),
             changedLines = List(
@@ -306,7 +306,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             )
           ), Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 17, fromNumLines = 0, toLineStart = 18, toNumLines = 8),
+              fromToRange = FromToRange(fromLineStart = 17, fromNumLines = Some(0), toLineStart = 18, toNumLines = Some(8)),
               context = Some(CtxLine("public class App"))
             ),
             changedLines = List(
@@ -384,7 +384,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             index = Option(Index(fromHash = "4545ecc", toHash = "0000000", mode = None))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 1, fromNumLines = 40, toLineStart = 0, toNumLines = 0),
+              fromToRange = FromToRange(fromLineStart = 1, fromNumLines = Some(40), toLineStart = 0, toNumLines = Some(0)),
               context = None
             ),
             changedLines = List(
@@ -465,7 +465,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             index = Option(Index(fromHash = "356f4b7", toHash = "f5b8743", mode = Some(100755)))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 26, fromNumLines = 2, toLineStart = 26, toNumLines = 2),
+              fromToRange = FromToRange(fromLineStart = 26, fromNumLines = Some(2), toLineStart = 26, toNumLines = Some(2)),
               context = Some(CtxLine("public class App"))
             ),
             changedLines = List(
@@ -476,7 +476,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             )
           ), Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 40, fromNumLines = 0, toLineStart = 41, toNumLines = 7),
+              fromToRange = FromToRange(fromLineStart = 40, fromNumLines = Some(0), toLineStart = 41, toNumLines = Some(7)),
               context = Some(CtxLine("public class App"))
             ),
             changedLines = List(
@@ -535,7 +535,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             index = Option(Index(fromHash = "f3e63d7", toHash = "e8f44ba", mode = Some(100644)))),
           hunks = List(Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 1, fromNumLines = 8, toLineStart = 1, toNumLines = 9),
+              fromToRange = FromToRange(fromLineStart = 1, fromNumLines = Some(8), toLineStart = 1, toNumLines = Some(9)),
               context = None
             ),
             changedLines = List(
@@ -551,7 +551,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             )
           ), Hunk(
             hunkHeader = HunkHeader(
-              fromToRange = FromToRange(fromLineStart = 18, fromNumLines = 6, toLineStart = 19, toNumLines = 8),
+              fromToRange = FromToRange(fromLineStart = 18, fromNumLines = Some(6), toLineStart = 19, toNumLines = Some(8)),
               context = Some(CtxLine("int cmd_http_fetch(int argc, const char **argv, const char *prefix)"))
             ),
             changedLines = List(
@@ -606,7 +606,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
     "Github issue #10 carriage return issue" in {
       allDiffs must succeedOn(readFile("/diffs/diff_pr_153_ko.diff.txt"))
     }
-    
+
     "Github issue #8 failing diff" in {
       allDiffs must succeedOn(readFile("/diffs/failing-diff.txt")).withResult(
         List(
@@ -616,7 +616,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             ExtendedDiffHeader(List(NewFileMode(100644)), Option(Index("0000000", "a244253", None))),
             List(
               Hunk(
-                HunkHeader(FromToRange(0, 0, 1, 5), None),
+                HunkHeader(FromToRange(0, Some(0), 1, Some(5)), None),
                 List(
                   AddedLine(""),
                   AddedLine("lorealprotogoconnector.key=value"),
@@ -640,7 +640,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             header = ExtendedDiffHeader(List(DeletedFileMode(100644)), Option(Index("27e8967", "0000000", None))),
             hunks = List(
               Hunk(
-                HunkHeader(FromToRange(1, 42, 0, 0), None),
+                HunkHeader(FromToRange(1, Some(42), 0, Some(0)), None),
                 List(
                   RemovedLine("<?php"),
                   RemovedLine(""),
@@ -696,7 +696,7 @@ class GitDiffParserSpec extends Specification with ParserMatchers with StringMat
             ),
             List(
               Hunk(
-                HunkHeader(FromToRange(0,0,1,12),None),
+                HunkHeader(FromToRange(0,Some(0),1,Some(12)),None),
                 List(
                   AddedLine("""<?xml version="1.0" standalone="no"?>"""),
                   AddedLine("""<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">"""),

@@ -3,10 +3,10 @@ package ch.mibex.bitbucket.sonar.client
 import javax.ws.rs.core.MediaType
 
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
-import ch.mibex.bitbucket.sonar.utils.{LogUtils, JsonUtils}
+import ch.mibex.bitbucket.sonar.utils.{JsonUtils, LogUtils}
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.LoggingFilter
-import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
+import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException, WebResource}
 import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
@@ -75,6 +75,7 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
 
   }
 
+  // see https://bitbucket.org/site/master/issues/12567/amount-of-pull-request-comments-returned
   def findOwnPullRequestComments(pullRequest: PullRequest): Seq[PullRequestComment] = {
 
     def isFromUs(comment: Map[String, Any]): Boolean = {
@@ -82,34 +83,30 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
         case Some(_) => config.teamName()
         case None => config.accountName()
       }
-      comment("user").asInstanceOf[Map[String, Any]]("username").asInstanceOf[String] equals userName
+      comment("author_info").asInstanceOf[Map[String, Any]]("username").asInstanceOf[String] equals userName
     }
-
-    def fetchCommentsPage(start: Int): (Option[Int], Seq[PullRequestComment]) =
-      fetchPage(s"/pullrequests/${pullRequest.id}/comments",
-        response =>
-          for (comment <- response("values").asInstanceOf[Seq[Map[String, Any]]] if isFromUs(comment))
-            yield {
-              val pathAndLine = for {
-                inline <- comment.get("inline") map { _.asInstanceOf[Map[String, Any]] }
-                filePath <- inline.get("path") map { _.asInstanceOf[String] }
-                line <- inline.get("to") map { _.asInstanceOf[Int] }
-              } yield (filePath, line)
-              PullRequestComment(
-                commentId = comment("id").asInstanceOf[Int],
-                content = comment("content").asInstanceOf[Map[String, Any]]("raw").asInstanceOf[String],
-                filePath = pathAndLine.map { _._1 },
-                line = pathAndLine.map { _._2 }
-              )
-            },
-        pageNr = start
-      )
-    forEachResultPage(Seq[PullRequestComment](), (pageStart, comments: Seq[PullRequestComment]) => {
-      val (nextPageStart, newComments) = fetchCommentsPage(pageStart)
-      (nextPageStart, comments ++ newComments)
-    })
+    val response = v1Api.path(s"/pullrequests/${pullRequest.id}/comments")
+      .accept(MediaType.APPLICATION_JSON)
+      .`type`(MediaType.APPLICATION_JSON)
+      .get(classOf[String])
+    for {
+      comment <- JsonUtils.seqFromJson(response) if isFromUs(comment)
+      filePath <- comment.get("filename") map { _.asInstanceOf[String] }
+      line <- comment.get("line_to") map { _.asInstanceOf[Int] }
+      commentId <- comment.get("comment_id") map { _.asInstanceOf[Int] }
+      content <- comment.get("content").map { _.asInstanceOf[String] }
+    } yield PullRequestComment(
+      commentId = commentId,
+      content = content,
+      filePath = Option(filePath),
+      line = Option(line)
+    )
   }
 
+  // create manually by
+  // curl -v -u YOUR_BITBUCKET_USER https://api.bitbucket.org/2.0/repositories/YOUR_USER_NAME/REPO_SLUG/pullrequests/PULL_REQUEST_ID/diff
+  // then copy the URL from the Location Header field in the HTTP response (LOCATION_URL below) and use that with the appended “?context=0” parameter for the second cURL:
+  // curl -u YOUR_BITBUCKET_USER LOCATION_URL?context=0
   def getPullRequestDiff(pullRequest: PullRequest): String = {
     // we do not want to use GET and Jersey's auto-redirect here because otherwise the context param
     // is not passed to the new location

@@ -36,4 +36,6 @@ object JsonUtils {
 
   def mapFromJson(json: String): Map[String, Any] = json.parseJson.convertTo[Map[String, Any]]
 
+  def seqFromJson(json: String): Seq[Map[String, Any]] = json.parseJson.convertTo[Seq[Map[String, Any]]]
+
 }

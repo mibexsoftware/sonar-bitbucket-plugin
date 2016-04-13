@@ -19,7 +19,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
       val ourComments = bitbucketClient.findOwnPullRequestComments(p)
       val report = new PullRequestReviewResults(pluginConfig)
       val commentsToDelete = reviewCommentsUpdater.createOrUpdateComments(p, ourComments, report)
-      deleteOutdatedComments(p, commentsToDelete)
+      deletePreviousComments(p, commentsToDelete)
       deletePreviousGlobalComments(p, ourComments)
       createGlobalComment(p, report)
       approveOrUnapproveIfEnabled(p, report)
@@ -65,7 +65,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
       }
   }
 
-  private def deleteOutdatedComments(pullRequest: PullRequest, commentsToDelete: Map[Int, PullRequestComment]) {
+  private def deletePreviousComments(pullRequest: PullRequest, commentsToDelete: Map[Int, PullRequestComment]) {
     commentsToDelete foreach { case (commentId, comment) =>
       if (comment.content.startsWith(SonarUtils.sonarMarkdownPrefix())) {
         bitbucketClient.deletePullRequestComment(pullRequest, commentId)

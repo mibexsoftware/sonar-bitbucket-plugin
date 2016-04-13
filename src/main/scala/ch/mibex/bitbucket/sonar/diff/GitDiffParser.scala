@@ -37,7 +37,7 @@ object GitDiffParser extends RegexParsers {
     }
   }
 
-  case class FromToRange(fromLineStart: Int, fromNumLines: Int = 0, toLineStart: Int, toNumLines: Int = 0)
+  case class FromToRange(fromLineStart: Int, fromNumLines: Option[Int], toLineStart: Int, toNumLines: Option[Int])
 
   case class HunkHeader(fromToRange: FromToRange, context: Option[CtxLine])
 
@@ -129,7 +129,7 @@ object GitDiffParser extends RegexParsers {
   def fromToRange: Parser[FromToRange] =
     ("@@ " ~> "-" ~> num) ~ opt("," ~> num) ~ (" +" ~> num) ~ opt("," ~> num) <~ " @@" ^^ {
       case startLineFrom ~ optNumLinesFrom ~ startLineTo ~ optNumLinesTo =>
-        FromToRange(startLineFrom, optNumLinesFrom.getOrElse(0), startLineTo, optNumLinesTo.getOrElse(0))
+        FromToRange(startLineFrom, optNumLinesFrom, startLineTo, optNumLinesTo)
     }
 
   //  @@ from-file-range to-file-range @@ [header]

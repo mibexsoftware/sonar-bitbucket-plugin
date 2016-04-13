@@ -26,18 +26,18 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   def createOrUpdateComments(pullRequest: PullRequest,
                              existingReviewComments: Seq[PullRequestComment],
-                             pullRequestResults: PullRequestReviewResults) = {
+                             pullRequestResults: PullRequestReviewResults): Map[Int, PullRequestComment] = {
     val commentsToBeAdded = processIssues(pullRequest, pullRequestResults)
     val (commentsByPathAndLine, commentsToDelete) = processExistingComments(existingReviewComments)
 
     commentsToBeAdded foreach { case (file, issuesByLine) =>
       issuesByLine foreach { case (line, issues) =>
-
         commentsByPathAndLine.get(file) match {
-          case Some(x) if x.contains(line) =>
+          case Some(commentsByLine) if commentsByLine.contains(line) => // already a comment on this line
+
             val comment = commentsByPathAndLine(file)(line)
 
-            if (comment.content != issues.toString()) {
+            if (comment.content != issues.toString()) { // only update if comment is not equal to existing one
               updateComment(pullRequest, issues.toString(), comment)
             }
 
@@ -57,6 +57,12 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
       .withDefaultValue(new mutable.HashMap[Int, PullRequestComment]())
     val reviewCommentsToBeDeleted = new mutable.HashMap[Int, PullRequestComment]()
     val inlineComments = existingReviewComments filter { _.isInline }
+    if (logger.isDebugEnabled) {
+      logger.debug(LogUtils.f(s"Found ${inlineComments.size} existing inline comments:"))
+      inlineComments foreach { c =>
+        logger.debug(LogUtils.f(s"  - ${c.filePath}:${c.line}: ${c.content}"))
+      }
+    }
 
     inlineComments foreach { c =>
       reviewCommentsToBeDeleted += c.commentId -> c
@@ -95,11 +101,12 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
           }
 
           commentsToBeAdded(repoRelPath)(lineNr).append("\n\n" + SonarUtils.renderAsMarkdown(i, settings))
+
+          reviewResults.issueFound(i)
         case None =>
           logger.debug(LogUtils.f(s"No path resolved for ${i.componentKey()}"))
       }
 
-      reviewResults.issueFound(i)
     }
 
     commentsToBeAdded.toMap

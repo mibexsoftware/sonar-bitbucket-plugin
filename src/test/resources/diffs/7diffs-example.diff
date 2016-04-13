@@ -1,0 +1,180 @@
+diff --git a/README.txt b/README.txt
+index 3853a30..9ba12b7 100755
+--- a/README.txt
++++ b/README.txt
+@@ -1,0 +2 @@ Maven multi-module project. created a la http://stackoverflow.com/questions/6328
++test
+diff --git a/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java b/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java
+index 57b70a8..492f073 100755
+--- a/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java
++++ b/multimod/src/db/src/main/java/ch/mycompany/test/db/App.java
+@@ -12 +11,0 @@ public class App
+-        double d = Double.longBitsToDouble(i);  // Noncompliant
+@@ -16 +14,0 @@ public class App
+-        System.out.println( "Hello World! " + d);
+@@ -17,0 +16,7 @@ public class App
++
++	public void foo () {
++	}
++
++	private void foo3() {
++		// no idea why this is empty
++	 }
+diff --git a/multimod/src/db/src/main/java/ch/mycompany/test/db/App2.java b/multimod/src/db/src/main/java/ch/mycompany/test/db/App2.java
+new file mode 100755
+index 0000000..66c3bc7
+--- /dev/null
++++ b/multimod/src/db/src/main/java/ch/mycompany/test/db/App2.java
+@@ -0,0 +1,19 @@
++package ch.mycompany.test.db;
++
++/**
++ * Hello world!
++ *
++ */
++public class App2
++{
++    public static void main( String[] args )
++    {
++		new App2().foo3();
++    }
++
++	public void foo () { }
++
++	private void foo3() {
++		// intentionally
++	 }
++}
+diff --git a/multimod/src/db/src/main/java/ch/mycompany/test/db/App3.java b/multimod/src/db/src/main/java/ch/mycompany/test/db/App3.java
+new file mode 100755
+index 0000000..491e4e5
+--- /dev/null
++++ b/multimod/src/db/src/main/java/ch/mycompany/test/db/App3.java
+@@ -0,0 +1,21 @@
++package ch.mycompany.test.db;
++
++/**
++ * Hello world!
++ */
++public class App3
++{
++    public static void main( String[] args )
++    {
++        int i = 42;
++        double g = Double.longBitsToDouble(i);  // Noncompliant
++        System.out.println( "Hello World! " + g);
++    }
++
++	public void foo () {
++		foo3();
++	}
++
++	private void foo3() {
++	 }
++}
+diff --git a/multimod/src/db/src/test/java/ch/mycompany/test/db/AppTest.java b/multimod/src/db/src/test/java/ch/mycompany/test/db/AppTest.java
+deleted file mode 100755
+index 4545ecc..0000000
+--- a/multimod/src/db/src/test/java/ch/mycompany/test/db/AppTest.java
++++ /dev/null
+@@ -1,40 +0,0 @@
+-package ch.mycompany.test.db;
+-
+-import junit.framework.Test;
+-import junit.framework.TestCase;
+-import junit.framework.TestSuite;
+-
+-
+-/**
+- * Unit test for simple App.
+- */
+-public class AppTest
+-    extends TestCase
+-{
+-    /**
+-     * Create the test case
+-     *
+-     * @param testName name of the test case
+-     */
+-    public AppTest( String testName )
+-    {
+-        super( testName );
+-    }
+-
+-    /**
+-     * @return the suite of tests being tested
+-     */
+-    public static Test suite()
+-    {
+-        return new TestSuite( AppTest.class );
+-    }
+-
+-    /**
+-     * Rigourous Test :-)
+-     */
+-    public void testApp()
+-    {
+-        ch.mycompany.test.db.App.main(new String[]{});
+-        assertTrue( true );
+-    }
+-}
+diff --git a/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java b/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java
+index 356f4b7..f7ee1b2 100755
+--- a/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java
++++ b/multimod/src/gui/src/main/java/ch/mycompany/test/gui/App.java
+@@ -8,0 +9 @@ public class App
++        double d = Double.longBitsToDouble(42);  // Noncompliant
+@@ -26,2 +27 @@ public class App
+-        int i = 100023;
+-        System.exit(-1);
++		int i = 100023;
+@@ -31,2 +30,0 @@ public class App
+-        int baba = 5555;
+-        //TODO fix this
+@@ -39 +37 @@ public class App
+-        double e = 2.718;
++          double e = 2.718;
+@@ -40,0 +39 @@ public class App
++
+diff --git a/multimod/src/gui/src/main/java/ch/mycompany/test/gui/StashTag.java b/multimod/src/gui/src/main/java/ch/mycompany/test/gui/StashTag.java
+new file mode 100755
+index 0000000..4ca9a70
+--- /dev/null
++++ b/multimod/src/gui/src/main/java/ch/mycompany/test/gui/StashTag.java
+@@ -0,0 +1,24 @@
++package ch.mycompany.test.gui;
++
++public class StashTag {
++    private final String id;
++    private final String displayId;
++
++    public StashTag(String id, String displayId) {
++        this.id = id;
++        this.displayId = displayId;
++    }
++
++    // value is being used by Velocity template
++    @SuppressWarnings("UnusedDeclaration")
++    public String getId() {
++        return id;
++    }
++
++    // value is being used by Velocity template
++    @SuppressWarnings("UnusedDeclaration")
++    public String getDisplayId() {
++		int  i = 42;
++        return displayId;
++    }
++}
+diff --git a/sonar.json b/sonar.json
+index 69165e1..8713f0a 100644
+--- a/sonar.json
++++ b/sonar.json
+@@ -0,0 +1 @@
++<<<<<<< destination:d657f52f8f651d212c3399785bff035ae29bdd99
+@@ -3,0 +5,5 @@
++=======
++{
++	'sonarHost': 'https://mrueegg.sonar.cloudbees.com',
++	'sonarProjectKey': 'ch.mycompany.test:multimod:develop'
++>>>>>>> source:5079373fc88df023581a4982244c28a773824ec9
