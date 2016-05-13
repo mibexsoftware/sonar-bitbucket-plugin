@@ -207,8 +207,9 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
       .accept(MediaType.APPLICATION_JSON)
       .`type`(MediaType.APPLICATION_JSON)
       .get(classOf[String])
+
     val page = JsonUtils.mapFromJson(response)
-    val nextPageStart = page.get("next").map(p => pageNr + 1)
+    val nextPageStart = page.get("next").map(_ => pageNr + 1)
     (nextPageStart, f(page))
   }
 

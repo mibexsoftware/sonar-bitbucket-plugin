@@ -4,7 +4,7 @@
 
 mvn clean install || exit 1
 
-PLUGIN_VERSION=1.1.2
+PLUGIN_VERSION=1.1.4-SNAPSHOT
 PLUGIN_FILE="./target/sonar-bitbucket-plugin-$PLUGIN_VERSION.jar"
 
 [ ! -f $PLUGIN_FILE ] && { echo "Plug-in JAR file not found: $PLUGIN_FILE"; exit 1; }
