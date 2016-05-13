@@ -16,6 +16,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
 
   override def executeOn(project: Project, sensorContext: SensorContext): Unit = {
     findPullRequestsForConfiguredBranch foreach { p =>
+      logger.info(LogUtils.f(s"Plug-in is active and will analyze project ${project.getName}"))
       val ourComments = bitbucketClient.findOwnPullRequestComments(p)
       val report = new PullRequestReviewResults(pluginConfig)
       val commentsToDelete = reviewCommentsUpdater.createOrUpdateComments(p, ourComments, report)

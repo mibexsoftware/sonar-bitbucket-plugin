@@ -4,6 +4,7 @@ import ch.mibex.bitbucket.sonar.SonarBBPlugin
 import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest}
 import ch.mibex.bitbucket.sonar.diff.GitDiffParser.{BinaryDiff, Diff, GitDiff}
+import ch.mibex.bitbucket.sonar.utils.LogUtils
 import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
@@ -31,6 +32,7 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
           }
           diffs.exists(isIssueOnChangedLines)
         case None =>
+          logger.warn(LogUtils.f(s"Could not resolve path for ${i.componentKey()}"))
           false  // ignore these issues
       }
     }

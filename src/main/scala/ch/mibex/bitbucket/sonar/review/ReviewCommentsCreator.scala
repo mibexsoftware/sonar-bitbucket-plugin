@@ -104,7 +104,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
           reviewResults.issueFound(i)
         case None =>
-          logger.debug(LogUtils.f(s"No path resolved for ${i.componentKey()}"))
+          logger.warn(LogUtils.f(s"Could not resolve path for ${i.componentKey()}"))
       }
 
     }
@@ -114,7 +114,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def debugLogIssueStatistics(issues: Seq[Issue], issuesOnChangedLines: Seq[Issue]) {
     if (logger.isDebugEnabled) {
-      logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.filter(_.isNew)} of them are new:"))
+      logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.count(_.isNew)} of them are new:"))
       issues foreach { i =>
         logger.debug(LogUtils.f(s"  - ${i.componentKey()}:${i.line()}: ${i.message()}"))
       }
