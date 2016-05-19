@@ -79,8 +79,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def processIssues(pullRequest: PullRequest, reviewResults: PullRequestReviewResults) = {
     val issues = collectIssuesInProject()
-    val onlyNewIssues = issues.filter(_.isNew)
-    val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, onlyNewIssues)
+    val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, issues)
     debugLogIssueStatistics(issues, issuesOnChangedLines)
     val onlyIssuesWithMinSeverity = issuesOnChangedLines
       .filter(i => SonarUtils.isSeverityGreaterOrEqual(i, pluginConfig.minSeverity()))
