@@ -9,7 +9,7 @@ import scala.collection.mutable
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class InputFileCache(gitBaseDirResolver: GitBaseDirResolver) extends BatchComponent {
-  private val componentKeysByFile = new mutable.HashMap[String, InputFile]()
+  private val componentKeysByFile = mutable.HashMap[String, InputFile]()
 
   def put(componentKey: String, inputFile: InputFile): Unit = {
     componentKeysByFile(componentKey) = inputFile

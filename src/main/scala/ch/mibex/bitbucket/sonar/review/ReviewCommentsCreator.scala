@@ -78,8 +78,9 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
   }
 
   private def processIssues(pullRequest: PullRequest, reviewResults: PullRequestReviewResults) = {
-    val issues = collectIssuesInProject() // we have to
-    val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, issues)
+    val issues = collectIssuesInProject()
+    val onlyNewIssues = issues.filter(_.isNew)
+    val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, onlyNewIssues)
     debugLogIssueStatistics(issues, issuesOnChangedLines)
     val onlyIssuesWithMinSeverity = issuesOnChangedLines
       .filter(i => SonarUtils.isSeverityGreaterOrEqual(i, pluginConfig.minSeverity()))
@@ -114,8 +115,8 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def debugLogIssueStatistics(issues: Seq[Issue], issuesOnChangedLines: Seq[Issue]) {
     if (logger.isDebugEnabled) {
-      logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.count(_.isNew)} of them are new:"))
-      issues foreach { i =>
+      logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.filter(_.isNew)} of them are new:"))
+      issues.filter(_.isNew) foreach { i =>
         logger.debug(LogUtils.f(s"  - ${i.componentKey()}:${i.line()}: ${i.message()}"))
       }
       logger.debug(LogUtils.f(s"And ${issuesOnChangedLines.size} of these are on changed or new lines:"))
@@ -149,7 +150,6 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
     // with sonar.analysis.mode=preview and sonar.analysis.mode=issues I always get all issues here
     // although I only request new ones; this should be changed with SonarQube 5.4; until then, we still have to filter
     // issues on changed lines only by using the diff from Bitbucket
-    // UPDATE: SonarQube 5.5 does not report any issues at all when filtering for new issues with issues.filter(_.isNew)
     projectIssues
       .issues()
       .asScala
