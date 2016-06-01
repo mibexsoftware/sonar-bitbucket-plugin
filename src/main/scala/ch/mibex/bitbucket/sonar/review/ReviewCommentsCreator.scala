@@ -79,7 +79,12 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def processIssues(pullRequest: PullRequest, reviewResults: PullRequestReviewResults) = {
     val issues = collectIssuesInProject()
-    val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, issues)
+    // we only take new issues here because for the existing issues we would not get
+    // file information in the input file cache sensor
+    val onlyNewIssues = issues.filter(_.isNew)
+    // because of Bitbucket bug #11925, we cannot create issues on context lines, so we have to filter the issues for
+    // new/changed lines to get the correct overall issue count for a pull request
+    val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, onlyNewIssues)
     debugLogIssueStatistics(issues, issuesOnChangedLines)
     val onlyIssuesWithMinSeverity = issuesOnChangedLines
       .filter(i => SonarUtils.isSeverityGreaterOrEqual(i, pluginConfig.minSeverity()))
@@ -114,7 +119,7 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
 
   private def debugLogIssueStatistics(issues: Seq[Issue], issuesOnChangedLines: Seq[Issue]) {
     if (logger.isDebugEnabled) {
-      logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.filter(_.isNew)} of them are new:"))
+      logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.count(_.isNew)} of them are new:"))
       issues.filter(_.isNew) foreach { i =>
         logger.debug(LogUtils.f(s"  - ${i.componentKey()}:${i.line()}: ${i.message()}"))
       }
@@ -146,9 +151,6 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
   }
 
   private def collectIssuesInProject() =
-    // with sonar.analysis.mode=preview and sonar.analysis.mode=issues I always get all issues here
-    // although I only request new ones; this should be changed with SonarQube 5.4; until then, we still have to filter
-    // issues on changed lines only by using the diff from Bitbucket
     projectIssues
       .issues()
       .asScala
