@@ -13,6 +13,9 @@ the severity, the explanation what this issue is about and a link to get more de
 
 ![Screenshot global pull request comment plugin](doc/example-issue.png)
 
+
+## This plug-in only supports SonarQube's "preview/issues" mode for analyzing your pull request branches. You cannot use it with "publish" (persistent) mode! 
+
 ## Usage
 
 ### Prerequisites
@@ -119,4 +122,13 @@ The configuration of the SonarRunner parameters is actually the same as with Mav
 
 ```
 sonar-runner -Dsonar.analysis.mode=issues <other-options>
+```
+
+
+### Using a proxy
+
+If you use a proxy, you can configure the host and port like follows:
+
+```
+-Dhttp.proxyHost=http://localhost -Dhttp.proxyPort=9000
 ```

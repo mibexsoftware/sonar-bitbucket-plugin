@@ -1,12 +1,15 @@
 package ch.mibex.bitbucket.sonar.client
 
+import java.net.{HttpURLConnection, InetSocketAddress, URL}
 import javax.ws.rs.core.MediaType
 
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.utils.{JsonUtils, LogUtils}
+import java.net.Proxy
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.LoggingFilter
-import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException, WebResource}
+import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
+import com.sun.jersey.client.urlconnection.{HttpURLConnectionFactory, URLConnectionClientHandler}
 import org.slf4j.LoggerFactory
 import org.sonar.api.BatchComponent
 import org.sonar.api.batch.InstantiationStrategy
@@ -23,17 +26,36 @@ case class PullRequestComment(commentId: Int, content: String, line: Option[Int]
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
+  private val PageStartIndex = 1
   private val logger = LoggerFactory.getLogger(getClass)
   private val client = createJerseyClient()
   private val v1Api = createResource("1.0")
   private val v2Api = createResource("2.0")
-  private val PageStartIndex = 1
+
+  private class ProxyConnectionFactory extends HttpURLConnectionFactory {
+
+    override def getHttpURLConnection(url: URL): HttpURLConnection = {
+      if (System.getProperties.containsKey("http.proxyHost")) {
+        val proxyHost = System.getProperties.getProperty("http.proxyHost")
+        val proxyPort = Integer.getInteger("http.proxyPort", 80)
+        logger.warn(LogUtils.f(s"Going to use proxy $proxyHost on port $proxyPort..."))
+        val proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort))
+        url.openConnection(proxy).asInstanceOf[HttpURLConnection]
+      } else {
+        url.openConnection().asInstanceOf[HttpURLConnection]
+      }
+    }
+
+  }
 
   private def createJerseyClient() = {
-    val client = Client.create(createJerseyConfig())
+    val ch = new URLConnectionClientHandler(new ProxyConnectionFactory())
+    val client = new Client(ch, createJerseyConfig())
+
     if (logger.isDebugEnabled) {
       client.addFilter(new LoggingFilter())
     }
+
     val authentication = new ClientAuthentication(config)
     authentication.configure(client)
     client
@@ -45,9 +67,8 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
     jerseyConfig
   }
 
-  private def createResource(apiVersion: String) = {
+  private def createResource(apiVersion: String) =
     client.resource(s"https://bitbucket.org/api/$apiVersion/repositories/${config.accountName()}/${config.repoSlug()}")
-  }
 
   def findPullRequestsWithSourceBranch(branchName: String): Seq[PullRequest] = {
 
