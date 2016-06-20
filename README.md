@@ -2,6 +2,8 @@
 
 ![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)
 
+### Download it from [Github releases page](https://github.com/mibexsoftware/sonar-bitbucket-plugin/releases/latest)
+
 This SonarQube plug-in creates pull request comments for issues found in your Bitbucket Cloud pull requests. It is very
 similar and inspired by the [SonarQube Github plug-in](https://github.com/SonarCommunity/sonar-github), but targets 
 Bitbucket Cloud. It creates a summary of the found issues as a global pull request comment which looks like this:
@@ -14,7 +16,7 @@ the severity, the explanation what this issue is about and a link to get more de
 ![Screenshot global pull request comment plugin](doc/example-issue.png)
 
 
-## This plug-in only supports SonarQube's "preview/issues" mode for analyzing your pull request branches. You cannot use it with "publish" (persistent) mode! 
+### This plug-in only supports SonarQube's "preview/issues" mode for analyzing your pull request branches. You cannot use it with "publish" (persistent) mode! 
 
 ## Usage
 
