@@ -20,7 +20,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
   "filter" should {
 
     "only yield issues on changed lines in complex diff" in new ComplexIssueContext {
-      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = "", dstCommitHash = "")
+      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = None, dstCommitHash = None)
       val inputFileCache = mock[InputFileCache]
       (inputFileCache.resolveRepoRelativePath("ch.mycompany.test:db:src/main/java/ch/mycompany/test/db/App.java")
         returns Option("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java"))
@@ -35,7 +35,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
     }
 
     "yield no issues when none in diff" in new NoNewIssuesContext {
-      val pullRequest = PullRequest(id = 2, srcBranch = "develop", srcCommitHash = "", dstCommitHash = "")
+      val pullRequest = PullRequest(id = 2, srcBranch = "develop", srcCommitHash = None, dstCommitHash = None)
       val inputFileCache = mock[InputFileCache]
       (inputFileCache.resolveRepoRelativePath("com.company:sonar-bitbucket-test:src/main/java/com/company/sonar/bitbucket/SimpleClass.java")
         returns Option("src/main/java/com/company/sonar/bitbucket/SimpleClass.java"))

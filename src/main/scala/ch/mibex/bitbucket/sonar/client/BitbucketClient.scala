@@ -17,7 +17,7 @@ import org.sonar.api.batch.InstantiationStrategy
 import scala.collection.mutable
 
 
-case class PullRequest(id: Int, srcBranch: String, srcCommitHash: String, dstCommitHash: String)
+case class PullRequest(id: Int, srcBranch: String, srcCommitHash: Option[String], dstCommitHash: Option[String])
 
 // global comments do not have a file path, and file-level comments do not require a line number
 case class PullRequestComment(commentId: Int, content: String, line: Option[Int], filePath: Option[String]) {
@@ -78,14 +78,14 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
           for (pullRequest <- response("values").asInstanceOf[Seq[Map[String, Any]]])
             yield {
               val source = pullRequest("source").asInstanceOf[Map[String, Any]]
-              val srcCommitHash = source("commit").asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String]
+              val srcHash = Option(source("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
               val dest = pullRequest("destination").asInstanceOf[Map[String, Any]]
-              val dstCommitHash = dest("commit").asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String]
+              val dstHash = Option(dest("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
               val branch = source("branch").asInstanceOf[Map[String, Any]]
               PullRequest(id = pullRequest("id").asInstanceOf[Int],
                           srcBranch = branch("name").asInstanceOf[String],
-                          srcCommitHash = srcCommitHash,
-                          dstCommitHash = dstCommitHash)
+                          srcCommitHash = srcHash,
+                          dstCommitHash = dstHash)
             },
         pageNr = start
       )
@@ -203,8 +203,8 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
           entity += "line_to" -> l
         case Some(l) if l == 0 =>
           // this is necessary for file-level pull request comments
-          entity += "anchor" -> pullRequest.srcCommitHash
-          entity += "dest_rev" -> pullRequest.dstCommitHash
+          entity += "anchor" -> pullRequest.srcCommitHash.getOrElse("")
+          entity += "dest_rev" -> pullRequest.dstCommitHash.getOrElse("")
         case _ => logger.warn(LogUtils.f(s"Invalid or missing line number for issue: $message"))
       }
     }

@@ -23,7 +23,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
   "createOrUpdateComments" should {
 
     "do not create new comments for already existing equivalent comments" in new ReviewContext {
-      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = "0affee", dstCommitHash = "0affee")
+      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = Some("0affee"), dstCommitHash = Some("0affee"))
       issuesOnChangedLinesFilter.filter(any[PullRequest], any[Seq[Issue]]) returns issues
       val existingReviewComments = List(PullRequestComment(
         commentId = 1,
@@ -56,7 +56,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
     }
 
     "update comment if one already exists on the same file and line " in new ReviewContext {
-      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = "0affee", dstCommitHash = "0affee")
+      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = Some("0affee"), dstCommitHash = Some("0affee"))
       issuesOnChangedLinesFilter.filter(any[PullRequest], any[Seq[Issue]]) returns issues
       val existingReviewComments = List(PullRequestComment(
         commentId = 1,
@@ -83,7 +83,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
     }
 
     "create comments for all issues found when there are no existing comments" in new ReviewContext {
-      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = "0affee", dstCommitHash = "0affee")
+      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash =  Some("0affee"), dstCommitHash =  Some("0affee"))
       issuesOnChangedLinesFilter.filter(any[PullRequest], any[Seq[Issue]]) returns issues
       reviewCommentsCreator.createOrUpdateComments(pullRequest, existingReviewComments = List(), pullRequestResults)
 
