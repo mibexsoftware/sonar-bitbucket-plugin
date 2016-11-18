@@ -60,9 +60,14 @@ class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchCompo
       logger.info(LogUtils.f("Plug-in considered disabled as Bitbucket account name is not configured."))
       return false
     }
-    if (server.getVersion.equals("5.1")) {
-      logger.error(LogUtils.f("SonarQube v5.1 is not supported because of issue SONAR-6398"))
-      return false
+    Option(server.getVersion) match {
+      case Some(version) =>
+        if (version.equals("5.1")) {
+          logger.error(LogUtils.f("SonarQube v5.1 is not supported because of issue SONAR-6398"))
+          return false
+        }
+      case None =>
+        logger.info(LogUtils.f("Version check not possible because server.getVersion returned null"))
     }
     require(isIllegalCharReplacementValid,
       s"""${SonarBBPlugin.PluginLogPrefix} Only the following characters

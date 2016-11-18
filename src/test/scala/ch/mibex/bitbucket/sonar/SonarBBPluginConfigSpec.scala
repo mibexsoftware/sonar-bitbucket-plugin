@@ -17,7 +17,6 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
   class SettingsContext extends Scope {
     val settings = new Settings(new PropertyDefinitions(classOf[SonarBBPlugin]))
     val server = mock[Server]
-    server.getVersion returns "4.5"
     val pluginConfig = new SonarBBPluginConfig(settings, server)
   }
 
@@ -104,6 +103,18 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
       invalidPluginConfig.validate() must beFalse
     }
+
+    "ignore when getVersion returns null" in new SettingsContext {
+      server.getVersion returns null
+      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
+      settings.setProperty(SonarBBPlugin.BitbucketApiKey, "xxxxxxxxx")
+      settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
+      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
+      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
+      val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
+      invalidPluginConfig.validate() must beTrue
+    }
+
 
     "validate for team API based authentication" in new SettingsContext {
       settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
