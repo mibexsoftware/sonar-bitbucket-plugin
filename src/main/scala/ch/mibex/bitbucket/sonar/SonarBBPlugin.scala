@@ -20,6 +20,7 @@ object SonarBBPlugin {
   final val BitbucketTeamName = "sonar.bitbucket.teamName"
   final val BitbucketApiKey = "sonar.bitbucket.apiKey"
   final val BitbucketBranchName = "sonar.bitbucket.branchName"
+  final val BitbucketPullRequestId = "sonar.bitbucket.pullRequestId"
   final val SonarQubeIllegalBranchCharReplacement = "sonar.bitbucket.branchIllegalCharReplacement"
   final val SonarQubeMinSeverity = "sonar.bitbucket.minSeverity"
   final val BitbucketOAuthClientKey = "sonar.bitbucket.oauthClientKey"
@@ -81,6 +82,12 @@ object SonarBBPlugin {
       name = "Bitbucket branch name",
       description = "The branch name you want to get analyzed with SonarQube. When building with Jenkins, " +
         "use $GIT_BRANCH. For Bamboo, you can use ${bamboo.repository.git.branch}.",
+      global = false
+    ),
+    new Property(
+      key = SonarBBPlugin.BitbucketPullRequestId,
+      name = "Bitbucket pull request id",
+      description = "The id of the pull request you want to get analyzed with SonarQube.",
       global = false
     ),
     new Property(

@@ -66,6 +66,11 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       pluginConfig.branchName() must_== "feature_XYZ"
     }
 
+    "yield configured pull request id" in new SettingsContext {
+      settings.setProperty(SonarBBPlugin.BitbucketPullRequestId, "123")
+      pluginConfig.pullRequestId() must_== 123
+    }
+
     "yield configured OAuth client key" in new SettingsContext {
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asdfagdfsahdshd")
       pluginConfig.oauthTokenClientKey() must_== "asdfagdfsahdshd"
@@ -179,7 +184,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
       pluginConfig.validate() must throwA(
-        new IllegalArgumentException("requirement failed: [sonar4bitbucket] The branch to analyze must be given")
+        new IllegalArgumentException("requirement failed: [sonar4bitbucket] The branch to analyze or the pull request id must be given")
       )
     }
 

@@ -15,7 +15,12 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
   private val logger = LoggerFactory.getLogger(getClass)
 
   override def executeOn(project: Project, sensorContext: SensorContext): Unit = {
-    findPullRequestsForConfiguredBranch foreach { p =>
+    val pullRequests =
+      if (pluginConfig.pullRequestId() != 0)
+        findPullRequestWithConfiguredId(pluginConfig.pullRequestId()).toList
+      else findPullRequestsForConfiguredBranch
+
+    pullRequests foreach { p =>
       logger.info(LogUtils.f(s"Plug-in is active and will analyze project ${project.getName}"))
       val ourComments = bitbucketClient.findOwnPullRequestComments(p)
       val report = new PullRequestReviewResults(pluginConfig)
@@ -32,13 +37,25 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
     pluginConfig.validate()
   }
 
+  private def findPullRequestWithConfiguredId(pullRequestId: Int): Option[PullRequest] = {
+    val pullRequest = bitbucketClient.findPullRequestWithId(pullRequestId)
+
+    if (pullRequest.isEmpty) {
+      logger.info(LogUtils.f(
+        s"""Pull request with id '$pullRequestId' not found.
+            |No analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
+    }
+
+    pullRequest
+  }
+
   private def findPullRequestsForConfiguredBranch = {
     val branchName = pluginConfig.branchName()
     val pullRequests = bitbucketClient.findPullRequestsWithSourceBranch(branchName)
     if (pullRequests.isEmpty) {
       logger.info(LogUtils.f(
         s"""No open pull requests with source branch '$branchName' found.
-           |No analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
+            |No analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
     }
     pullRequests
   }

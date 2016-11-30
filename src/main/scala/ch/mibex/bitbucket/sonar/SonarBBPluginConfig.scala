@@ -52,6 +52,9 @@ class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchCompo
     branchName
   }
 
+  def pullRequestId(): Int =
+    settings.getInt(SonarBBPlugin.BitbucketPullRequestId)
+
   private def branchIllegalCharReplacement() = // we cannot use "" as defaultValue with SonarQube settings
     Option(settings.getString(SonarBBPlugin.SonarQubeIllegalBranchCharReplacement)).getOrElse("")
 
@@ -74,7 +77,7 @@ class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchCompo
          |are allowed as replacement: ${SonarUtils.LegalBranchNameReplacementChars}""".stripMargin.replaceAll("\n", " ")
     )
     require(Option(repoSlug()).nonEmpty, s"${SonarBBPlugin.PluginLogPrefix} A repository slug must be set")
-    require(Option(branchName()).nonEmpty, s"${SonarBBPlugin.PluginLogPrefix} The branch to analyze must be given")
+    require(Option(branchName()).nonEmpty || pullRequestId() != 0, s"${SonarBBPlugin.PluginLogPrefix} The branch to analyze or the pull request id must be given")
     require(isValidAuthenticationGiven,
       s"""${SonarBBPlugin.PluginLogPrefix} Either the name and API key for the Bitbucket team account
         |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
@@ -101,6 +104,7 @@ class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchCompo
         |oauthTokenClientKey=${Option(oauthTokenClientKey()).flatMap(s => Option("***")).orNull},
         |oauthTokenClientSecret=${Option(oauthTokenClientSecret()).flatMap(s => Option("***")).orNull},
         |branchName=${branchName()},
+        |pullRequestId=${pullRequestId()}
         |approveUnApproveEnabled=${approveUnApproveEnabled()},
         |minSeverity=${minSeverity()})""".stripMargin.replaceAll("\n", "")
 

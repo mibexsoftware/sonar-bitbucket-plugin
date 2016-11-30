@@ -71,6 +71,35 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
   private def createResource(apiVersion: String) =
     client.resource(s"https://bitbucket.org/api/$apiVersion/repositories/${config.accountName()}/${config.repoSlug()}")
 
+  private def mapToPullRequest(pullRequest: Map[String, Any]): PullRequest = {
+    val source = pullRequest("source").asInstanceOf[Map[String, Any]]
+    val srcHash = Option(source("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
+    val dest = pullRequest("destination").asInstanceOf[Map[String, Any]]
+    val dstHash = Option(dest("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
+    val branch = source("branch").asInstanceOf[Map[String, Any]]
+
+    PullRequest(
+      id = pullRequest("id").asInstanceOf[Int],
+      srcBranch = branch("name").asInstanceOf[String],
+      srcCommitHash = srcHash,
+      dstCommitHash = dstHash
+    )
+  }
+
+  def findPullRequestWithId(pullRequestId: Int): Option[PullRequest] = {
+    try {
+      val response = v2Api.path(s"/pullrequests/$pullRequestId")
+        .accept(MediaType.APPLICATION_JSON)
+        .`type`(MediaType.APPLICATION_JSON)
+        .get(classOf[String])
+
+      val pullRequest = JsonUtils.mapFromJson(response)
+      Some(mapToPullRequest(pullRequest))
+    } catch {
+      case e: UniformInterfaceException if e.getResponse.getStatus == 404 => None
+    }
+  }
+
   def findPullRequestsWithSourceBranch(branchName: String): Seq[PullRequest] = {
 
     def fetchPullRequestsPage(start: Int): (Option[Int], Seq[PullRequest]) =
@@ -78,15 +107,7 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
         response =>
           for (pullRequest <- response("values").asInstanceOf[Seq[Map[String, Any]]])
             yield {
-              val source = pullRequest("source").asInstanceOf[Map[String, Any]]
-              val srcHash = Option(source("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
-              val dest = pullRequest("destination").asInstanceOf[Map[String, Any]]
-              val dstHash = Option(dest("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
-              val branch = source("branch").asInstanceOf[Map[String, Any]]
-              PullRequest(id = pullRequest("id").asInstanceOf[Int],
-                srcBranch = branch("name").asInstanceOf[String],
-                srcCommitHash = srcHash,
-                dstCommitHash = dstHash)
+              mapToPullRequest(pullRequest)
             },
         pageNr = start
       )
