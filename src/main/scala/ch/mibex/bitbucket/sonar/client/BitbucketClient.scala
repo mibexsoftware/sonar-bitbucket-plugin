@@ -31,6 +31,7 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
   private val client = createJerseyClient()
   private val v1Api = createResource("1.0")
   private val v2Api = createResource("2.0")
+  private val uuid = getLoggedInUserUUID()
 
   private class ProxyConnectionFactory extends HttpURLConnectionFactory {
 
@@ -83,9 +84,9 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
               val dstHash = Option(dest("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
               val branch = source("branch").asInstanceOf[Map[String, Any]]
               PullRequest(id = pullRequest("id").asInstanceOf[Int],
-                          srcBranch = branch("name").asInstanceOf[String],
-                          srcCommitHash = srcHash,
-                          dstCommitHash = dstHash)
+                srcBranch = branch("name").asInstanceOf[String],
+                srcCommitHash = srcHash,
+                dstCommitHash = dstHash)
             },
         pageNr = start
       )
@@ -96,32 +97,41 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
 
   }
 
-  // see https://bitbucket.org/site/master/issues/12567/amount-of-pull-request-comments-returned
   def findOwnPullRequestComments(pullRequest: PullRequest): Seq[PullRequestComment] = {
 
     def isFromUs(comment: Map[String, Any]): Boolean = {
-      val userName = Option(config.teamName()) match {
-        case Some(_) => config.teamName()
-        case None => config.accountName()
-      }
-      comment("author_info").asInstanceOf[Map[String, Any]]("username").asInstanceOf[String] equals userName
+      comment("user").asInstanceOf[Map[String, Any]]("uuid").asInstanceOf[String] equals uuid
     }
-    val response = v1Api.path(s"/pullrequests/${pullRequest.id}/comments")
-      .accept(MediaType.APPLICATION_JSON)
-      .`type`(MediaType.APPLICATION_JSON)
-      .get(classOf[String])
-    for {
-      comment <- JsonUtils.seqFromJson(response) if isFromUs(comment)
-      filePath <- comment.get("filename") map { _.asInstanceOf[String] }
-      line <- comment.get("line_to") map { _.asInstanceOf[Int] }
-      commentId <- comment.get("comment_id") map { _.asInstanceOf[Int] }
-      content <- comment.get("content").map { _.asInstanceOf[String] }
-    } yield PullRequestComment(
-      commentId = commentId,
-      content = content,
-      filePath = Option(filePath),
-      line = Option(line)
-    )
+
+    def fetchPullRequestCommentsPage(start: Int): (Option[Int], Seq[PullRequestComment]) = {
+      fetchPage(s"/pullrequests/${pullRequest.id}/comments", f =
+        response =>
+          for (comment <- response("values").asInstanceOf[Seq[Map[String, Any]]] if isFromUs(comment))
+            yield {
+              val commentId = comment("id").asInstanceOf[Int]
+              val content = comment("content").asInstanceOf[Map[String, Any]]("raw").asInstanceOf[String]
+              val filePath = comment.get("inline") map {
+                _.asInstanceOf[Map[String, Any]]("path").asInstanceOf[String]
+              }
+              val line = comment.get("inline") map {
+                _.asInstanceOf[Map[String, Any]]("to").asInstanceOf[Int]
+              }
+
+              PullRequestComment(
+                commentId = commentId,
+                content = content,
+                filePath = filePath,
+                line = line
+              )
+            },
+        pageNr = start
+      )
+    }
+
+    forEachResultPage(Seq[PullRequestComment](), (pageStart, pullRequests: Seq[PullRequestComment]) => {
+      val (nextPageStart, newPullRequestComments) = fetchPullRequestCommentsPage(pageStart)
+      (nextPageStart, pullRequests ++ newPullRequestComments)
+    })
   }
 
   // create manually by
@@ -173,7 +183,7 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
         .delete()
     } catch {
       case e: UniformInterfaceException if e.getResponse.getStatus == 404 =>
-        // has not been approved yet, so we cannot unapprove yet => ignore this
+      // has not been approved yet, so we cannot unapprove yet => ignore this
     }
   }
 
@@ -220,7 +230,8 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
                            f: Map[String, Any] => T,
                            queryParm: (String, String) = ("", ""),
                            pageNr: Int = PageStartIndex,
-                           pageSize: Int = 50): (Option[Int], T) = { // 50 is the pull requests resource max pagelen!
+                           pageSize: Int = 50): (Option[Int], T) = {
+    // 50 is the pull requests resource max pagelen!
     val response = v2Api.path(path)
       .queryParam("page", pageNr.toString)
       .queryParam("pagelen", pageSize.toString)
@@ -243,6 +254,15 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
       pageStart = nextPageStart
     }
     result
+  }
+
+  private def getLoggedInUserUUID(): String = {
+    val response = client.resource(s"https://bitbucket.org/api/2.0/user")
+      .accept(MediaType.APPLICATION_JSON)
+      .get(classOf[String])
+
+    val user = JsonUtils.mapFromJson(response)
+    user("uuid").asInstanceOf[String]
   }
 
 }
