@@ -1,11 +1,10 @@
 package ch.mibex.bitbucket.sonar.client
 
-import java.net.{HttpURLConnection, InetSocketAddress, URL}
+import java.net.{HttpURLConnection, InetSocketAddress, Proxy, URL}
 import javax.ws.rs.core.MediaType
 
-import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.utils.{JsonUtils, LogUtils}
-import java.net.Proxy
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
@@ -256,13 +255,20 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
     result
   }
 
-  private def getLoggedInUserUUID = {
-    val response = client
-      .resource(s"https://bitbucket.org/api/2.0/user")
-      .accept(MediaType.APPLICATION_JSON)
-      .get(classOf[String])
-    val user = JsonUtils.mapFromJson(response)
-    user("uuid").asInstanceOf[String]
+  private def getLoggedInUserUUID: String = {
+    try {
+      val response = client
+        .resource(s"https://bitbucket.org/api/2.0/user")
+        .accept(MediaType.APPLICATION_JSON)
+        .get(classOf[String])
+      val user = JsonUtils.mapFromJson(response)
+      user("uuid").asInstanceOf[String]
+    } catch {
+      case e: UniformInterfaceException =>
+        throw new IllegalStateException(
+          s"${SonarBBPlugin.PluginLogPrefix} Couldn't fetch logged in user uuid, got status: ${e.getResponse.getStatus}"
+        )
+    }
   }
 
 }
