@@ -5,7 +5,6 @@ import ch.mibex.bitbucket.sonar.utils.{SonarUtils, StringUtils}
 import org.sonar.api.issue.Issue
 import org.sonar.api.rule.Severity
 
-import scala.StringBuilder
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
