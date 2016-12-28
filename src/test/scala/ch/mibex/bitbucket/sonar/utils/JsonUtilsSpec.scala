@@ -6,6 +6,8 @@ import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import spray.json.SerializationException
 
+import scala.collection.mutable
+
 @RunWith(classOf[JUnitRunner])
 class JsonUtilsSpec extends Specification {
 
@@ -24,6 +26,15 @@ class JsonUtilsSpec extends Specification {
     "yield a serialization error when an unknown type is given" in {
       case class UnknownClassToSerialize()
       JsonUtils.map2Json(Map("t" -> UnknownClassToSerialize())) must throwA[SerializationException]
+    }
+
+    "map nested mutable map to JSON" in {
+      val m = new mutable.HashMap[String, Any]()
+      m += "severity" -> Severity.BLOCKER
+      val testJson =
+        """{"issues":{"severity":"BLOCKER"}}"""
+      val testMap = Map("issues" -> m.toMap)
+      JsonUtils.map2Json(testMap) must_== testJson
     }
 
   }
