@@ -93,8 +93,10 @@ or as your team account with an API key. If you have a team account, we suggest 
 if the Sonar issues are created by this account opposed to when a personal account is taken. Unfortunately, Bitbucket
 does not (yet) support technical users as GitHub does, so we have to use either a user or team account here.
 
-If you go with OAuth, you have to configure a callback URL and use the Bitbucket permission "Repository write" and 
-"Pull requests write" for the new OAuth consumer.
+If you go with OAuth, you have to configure a callback URL and use the Bitbucket permissions "Repository write" and 
+"Pull requests write" (for commenting on the pull request) as well as "Account read" for the new OAuth consumer. The permissions should look like follows:
+
+![Permissions necessary for OAuth consumer](doc/min-permissions-bitbucket.png)
  
 If everything is configured as explained, you should see pull request comments for all found Sonar issues in your pull
 request after the next push to your Bitbucket repository.
