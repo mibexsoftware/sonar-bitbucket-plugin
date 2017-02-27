@@ -64,7 +64,7 @@ object SonarUtils {
       URLEncoder.encode(url, "UTF-8")
     } catch {
       case e: UnsupportedEncodingException =>
-        throw new IllegalStateException("[sonar4bitbucket] Encoding not supported", e)
+        throw new IllegalStateException(s"${SonarBBPlugin.PluginLogPrefix} Encoding not supported", e)
     }
   }
 

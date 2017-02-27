@@ -30,7 +30,7 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
   private val client = createJerseyClient()
   private val v1Api = createResource("1.0")
   private val v2Api = createResource("2.0")
-  private val uuid = getLoggedInUserUUID()
+  private lazy val uuid = getLoggedInUserUUID
 
   private class ProxyConnectionFactory extends HttpURLConnectionFactory {
 
@@ -119,9 +119,8 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
 
   def findOwnPullRequestComments(pullRequest: PullRequest): Seq[PullRequestComment] = {
 
-    def isFromUs(comment: Map[String, Any]): Boolean = {
+    def isFromUs(comment: Map[String, Any]): Boolean =
       comment("user").asInstanceOf[Map[String, Any]]("uuid").asInstanceOf[String] equals uuid
-    }
 
     def fetchPullRequestCommentsPage(start: Int): (Option[Int], Seq[PullRequestComment]) = {
       fetchPage(s"/pullrequests/${pullRequest.id}/comments", f =
@@ -136,7 +135,6 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
               val line = comment.get("inline") map {
                 _.asInstanceOf[Map[String, Any]]("to").asInstanceOf[Int]
               }
-
               PullRequestComment(
                 commentId = commentId,
                 content = content,
@@ -276,21 +274,19 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
     result
   }
 
-  private def getLoggedInUserUUID(): String = {
-    if (!config.isEnabled) {
-      return null
-    }
-
+  private def getLoggedInUserUUID: String = {
     try {
-      val response = client.resource(s"https://bitbucket.org/api/2.0/user")
+      val response = client
+        .resource(s"https://bitbucket.org/api/2.0/user")
         .accept(MediaType.APPLICATION_JSON)
         .get(classOf[String])
-
       val user = JsonUtils.mapFromJson(response)
       user("uuid").asInstanceOf[String]
     } catch {
       case e: UniformInterfaceException =>
-        throw new IllegalStateException(s"${SonarBBPlugin.PluginLogPrefix} Couldn't fetch logged in user uuid, got status: ${e.getResponse.getStatus}")
+        throw new IllegalStateException(
+          s"${SonarBBPlugin.PluginLogPrefix} Couldn't fetch logged in user uuid, got status: ${e.getResponse.getStatus}"
+        )
     }
   }
 
