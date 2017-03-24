@@ -9,9 +9,8 @@ import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
 import com.sun.jersey.client.urlconnection.{HttpURLConnectionFactory, URLConnectionClientHandler}
-import org.slf4j.LoggerFactory
-import org.sonar.api.BatchComponent
-import org.sonar.api.batch.InstantiationStrategy
+import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
+import org.sonar.api.utils.log.Loggers
 
 import scala.collection.mutable
 
@@ -23,10 +22,28 @@ case class PullRequestComment(commentId: Int, content: String, line: Option[Int]
   val isInline = line.isDefined && filePath.isDefined
 }
 
+sealed trait BuildStatus {
+  def name: String
+  def description: String
+}
+case class FailingBuildStatus(numBlocker: Int, numCritical: Int) extends BuildStatus {
+  val name = "FAILED"
+  val description = s"Sonar analysis failed. $numBlocker blocker and $numCritical critical issues found."
+}
+case object InProgressBuildStatus extends BuildStatus {
+  val name = "INPROGRESS"
+  val description = "Sonar analysis in progress..."
+}
+case object SuccessfulBuildstatus extends BuildStatus {
+  val name = "SUCCESSFUL"
+  val description = s"Sonar analysis successful :-)"
+}
+
+@BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
-  private val PageStartIndex = 1
-  private val logger = LoggerFactory.getLogger(getClass)
+class BitbucketClient(config: SonarBBPluginConfig) {
+  private final val PageStartIndex = 1
+  private val logger = Loggers.get(getClass)
   private val client = createJerseyClient()
   private val v1Api = createResource("1.0")
   private val v2Api = createResource("2.0")
@@ -105,9 +122,7 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
       fetchPage("/pullrequests", queryParm = ("state", "OPEN"), f =
         response =>
           for (pullRequest <- response("values").asInstanceOf[Seq[Map[String, Any]]])
-            yield {
-              mapToPullRequest(pullRequest)
-            },
+          yield mapToPullRequest(pullRequest),
         pageNr = start
       )
     forEachResultPage(Seq[PullRequest](), (pageStart, pullRequests: Seq[PullRequest]) => {
@@ -181,6 +196,19 @@ class BitbucketClient(config: SonarBBPluginConfig) extends BatchComponent {
         .path(s"/pullrequests/${pullRequest.id}/comments/$commentId")
         .delete(classOf[ClientResponse])
     response.getStatus == 200
+  }
+
+  def updateBuildStatus(pullRequest: PullRequest, buildStatus: BuildStatus, sonarServerUrl: String): Unit = {
+    v2Api
+      .path(s"/commit/${pullRequest.srcCommitHash.getOrElse("")}/statuses/build")
+      .`type`(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .entity(JsonUtils.map2Json(Map("state" -> buildStatus.name,
+                                     "description" -> buildStatus.description,
+                                     "name" -> "Sonar analysis",
+                                     "key" -> s"SONAR-ANALYSIS-PR-${pullRequest.id}",
+                                     "url" -> sonarServerUrl)))
+      .post()
   }
 
   def approve(pullRequest: PullRequest): Unit = {
