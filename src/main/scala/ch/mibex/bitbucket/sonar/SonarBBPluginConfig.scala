@@ -5,12 +5,10 @@ import org.sonar.api.batch.rule.Severity
 import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
 import org.sonar.api.config.Settings
 import org.sonar.api.platform.Server
-import org.sonar.api.utils.log.Loggers
 
 @BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class SonarBBPluginConfig(settings: Settings, server: Server) {
-  private val logger = Loggers.get(getClass)
 
   def isEnabled: Boolean = settings.hasKey(SonarBBPlugin.BitbucketAccountName)
 
@@ -50,11 +48,7 @@ class SonarBBPluginConfig(settings: Settings, server: Server) {
 
   def validate(): Unit = {
     require(
-      Option(server.getVersion).isDefined,
-      s"${SonarBBPlugin.PluginLogPrefix} Failed to determine SonarQube server version"
-    )
-    require(
-      server.getVersion != "5.1",
+      Option(server.getVersion).isEmpty || server.getVersion != "5.1",
       s"${SonarBBPlugin.PluginLogPrefix} SonarQube v5.1 is not supported because of issue SONAR-6398"
     )
     require(

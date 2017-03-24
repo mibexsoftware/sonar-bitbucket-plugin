@@ -82,8 +82,8 @@ object SonarBBPlugin {
     ),
     new Property(
       key = SonarBBPlugin.BitbucketPullRequestId,
-      name = "Bitbucket pull request id",
-      description = "The id of the pull request you want to get analyzed with SonarQube.",
+      name = "Bitbucket pull request ID",
+      description = "The ID of the pull request you want to get analyzed with SonarQube.",
       global = false
     ),
     new Property(
@@ -114,7 +114,7 @@ object SonarBBPlugin {
       name = "Bitbucket build status for pull request",
       defaultValue = "true",
       description = "If enabled, the plug-in will update the build status of the pull request depending on the " +
-        "Sonar analysis.",
+        "Sonar analysis result. The analysis and also the build is failed if there are any critical or blocker issues.",
       global = true
     )
   )

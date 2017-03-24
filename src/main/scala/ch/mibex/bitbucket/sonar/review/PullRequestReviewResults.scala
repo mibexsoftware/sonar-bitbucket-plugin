@@ -18,7 +18,8 @@ class PullRequestReviewResults(pluginConfiguration: SonarBBPluginConfig) {
 
   def calculateBuildStatus(): BuildStatus =
     if (canBeApproved) SuccessfulBuildstatus
-    else FailingBuildStatus(numCritical = newIssuesBySeverity(Severity.CRITICAL), numBlocker = newIssuesBySeverity(Severity.BLOCKER))
+    else FailingBuildStatus(numCritical = newIssuesBySeverity(Severity.CRITICAL),
+                            numBlocker = newIssuesBySeverity(Severity.BLOCKER))
 
   def formatAsMarkdown(): String = {
     val markdown = new StringBuilder()
