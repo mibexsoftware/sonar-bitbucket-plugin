@@ -17,7 +17,6 @@ import org.specs2.runner.JUnitRunner
 import org.specs2.specification.Scope
 
 
-
 @RunWith(classOf[JUnitRunner])
 class ClientAuthenticationSpec extends Specification with Mockito {
 
@@ -76,6 +75,5 @@ class ClientAuthenticationSpec extends Specification with Mockito {
     }
 
   }
-
 
 }

@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+     <modelVersion>4.0.0</modelVersion>
+     <parent>
+         <groupId>org.sonarsource.parent</groupId>
+         <artifactId>parent</artifactId>
+         <version>38</version>
+         <relativePath />
+      </parent>
+
     <groupId>ch.mibex.bitbucket</groupId>
     <artifactId>sonar-bitbucket-plugin</artifactId>
-    <version>1.1.7</version>
+    <version>1.2.0</version>
     <packaging>sonar-plugin</packaging>
     <name>Sonar Bitbucket Cloud Plugin</name>
 
@@ -40,7 +47,7 @@
     </repositories>
 
     <properties>
-        <sonar.version>4.5.4</sonar.version>
+        <sonar.version>5.6</sonar.version>
         <sonar.pluginKey>sonarbitbucket</sonar.pluginKey>
         <sonar.pluginName>Bitbucket for Sonar</sonar.pluginName>
         <sonar.pluginClass>ch.mibex.bitbucket.sonar.SonarBBPlugin</sonar.pluginClass>
@@ -67,7 +74,7 @@
     <dependencies>
         <!-- Sonar -->
         <dependency>
-            <groupId>org.codehaus.sonar</groupId>
+            <groupId>org.sonarsource.sonarqube</groupId>
             <artifactId>sonar-plugin-api</artifactId>
             <version>${sonar.version}</version>
             <scope>provided</scope>
@@ -107,6 +114,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- necessary because otherwise we get "javax.annotation.CheckForNull" not found compiler errors  -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Unit tests -->
         <dependency>
             <groupId>org.specs2</groupId>
@@ -136,15 +151,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.sonar</groupId>
-                <artifactId>sonar-packaging-maven-plugin</artifactId>
-                <version>1.7</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <pluginClass>ch.mibex.bitbucket.sonar.SonarBBPlugin</pluginClass>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>

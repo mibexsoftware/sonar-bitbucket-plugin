@@ -1,6 +1,7 @@
 package ch.mibex.bitbucket.sonar.review
 
-import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
+import ch.mibex.bitbucket.sonar.client.BitbucketClient
+import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPlugin, SonarBBPluginConfig}
 import org.sonar.api.CoreProperties
 import org.sonar.api.batch.bootstrap.ProjectBuilder
 import org.sonar.api.config.Settings
@@ -19,7 +20,7 @@ class PullRequestProjectBuilder(pluginConfiguration: SonarBBPluginConfig,
 
   private def checkAnalysisMode() {
     require(
-      isDryRunMode || isPreviewMode || isIncrementalMode || isIssuesMode,
+      isPreviewMode || isIncrementalMode || isIssuesMode,
       s"""${SonarBBPlugin.PluginLogPrefix} The plug-in only works in preview or issues mode.
          |Please set "-Dsonar.analysis.mode" accordingly.""".stripMargin.replaceAll("\n", " "))
   }
@@ -31,7 +32,5 @@ class PullRequestProjectBuilder(pluginConfiguration: SonarBBPluginConfig,
 
   private def isPreviewMode =
     settings.getString(CoreProperties.ANALYSIS_MODE) == CoreProperties.ANALYSIS_MODE_PREVIEW
-
-  private def isDryRunMode = settings.getBoolean(CoreProperties.DRY_RUN)
 
 }

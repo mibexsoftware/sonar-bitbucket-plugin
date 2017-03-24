@@ -1,6 +1,6 @@
 package ch.mibex.bitbucket.sonar.review
 
-import ch.mibex.bitbucket.sonar.SonarBBPluginConfig
+import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPluginConfig}
 import org.junit.runner.RunWith
 import org.sonar.api.CoreProperties
 import org.sonar.api.batch.bootstrap.ProjectBuilder
@@ -36,21 +36,6 @@ class PullRequestBuilderSpec extends Specification with Mockito {
             |Please set "-Dsonar.analysis.mode" accordingly.""".stripMargin.replace("\n", " ")
         )
       )
-    }
-
-    "fail when sensor analysis is used" in new ProjectBuilderContext {
-      settings.getString(CoreProperties.ANALYSIS_MODE) returns CoreProperties.ANALYSIS_MODE_SENSOR
-      projectBuilder.build(projectContext) must throwA(
-        new IllegalArgumentException(
-          """requirement failed: [sonar4bitbucket] The plug-in only works in preview or issues mode.
-            |Please set "-Dsonar.analysis.mode" accordingly.""".stripMargin.replace("\n", " ")
-        )
-      )
-    }
-
-    "allow analysis when dry mode is used" in new ProjectBuilderContext {
-      settings.getBoolean(CoreProperties.DRY_RUN) returns true
-      projectBuilder.build(projectContext)
     }
 
     "allow analysis when preview mode is used" in new ProjectBuilderContext {

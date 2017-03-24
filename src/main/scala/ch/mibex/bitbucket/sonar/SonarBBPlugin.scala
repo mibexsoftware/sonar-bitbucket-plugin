@@ -1,16 +1,12 @@
 package ch.mibex.bitbucket.sonar
 
-import java.util.{List => JList}
 
-import ch.mibex.bitbucket.sonar.cache.{InputFileCache, InputFileCacheSensor}
 import ch.mibex.bitbucket.sonar.client.BitbucketClient
 import ch.mibex.bitbucket.sonar.diff.IssuesOnChangedLinesFilter
-import ch.mibex.bitbucket.sonar.review.{GitBaseDirResolver, PullRequestProjectBuilder, ReviewCommentsCreator, SonarReviewPostJob}
-import org.sonar.api._
+import ch.mibex.bitbucket.sonar.review.{PullRequestProjectBuilder, ReviewCommentsCreator, SonarReviewPostJob}
+import org.sonar.api.Plugin.Context
+import org.sonar.api.{PropertyType, _}
 import org.sonar.api.rule.Severity
-
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
 
 
 object SonarBBPlugin {
@@ -26,11 +22,11 @@ object SonarBBPlugin {
   final val BitbucketOAuthClientKey = "sonar.bitbucket.oauthClientKey"
   final val BitbucketOAuthClientSecret = "sonar.bitbucket.oauthClientSecret"
   final val BitbucketApproveUnapprove = "sonar.bitbucket.approvalFeatureEnabled"
+  final val BitbucketBuildStatus = "sonar.bitbucket.buildStatusEnabled"
 }
 
 
 @Properties(
-  // global = false: do not show these settings in the config page of SonarQube
   Array(
     new Property(
       key = SonarBBPlugin.BitbucketAccountName,
@@ -95,7 +91,7 @@ object SonarBBPlugin {
       name = "SonarQube invalid branch character replacement",
       description = "If you are using SonarQube version <= 4.5, then you have to escape '/' in your branch names " +
         "with another character. Please provide this replacement character here.",
-      global = false
+      global = true
     ),
     new Property(
       key = SonarBBPlugin.SonarQubeMinSeverity,
@@ -103,7 +99,7 @@ object SonarBBPlugin {
       defaultValue = Severity.MAJOR, // we cannot use default Sonar#defaultSeverity here as this is not a constant value
       description = "Use either INFO, MINOR, MAJOR, CRITICAL or BLOCKER to only have pull request comments " +
         "created for issues with severities greater or equal to this one.",
-      global = false
+      global = true
     ),
     new Property(
       key = SonarBBPlugin.BitbucketApproveUnapprove,
@@ -111,24 +107,30 @@ object SonarBBPlugin {
       defaultValue = "true",
       description = "If enabled, the plug-in will approve the pull request if there are no critical and no " +
         "blocker issues, otherwise it will unapprove the pull request.",
-      global = false
+      global = true
+    ),
+    new Property(
+      key = SonarBBPlugin.BitbucketBuildStatus,
+      name = "Bitbucket build status for pull request",
+      defaultValue = "true",
+      description = "If enabled, the plug-in will update the build status of the pull request depending on the " +
+        "Sonar analysis.",
+      global = true
     )
   )
 )
-class SonarBBPlugin extends SonarPlugin {
+class SonarBBPlugin extends Plugin {
 
-  override def getExtensions: JList[Object] = {
-    ListBuffer(
+  override def define(context: Context): Unit = {
+    context.addExtensions(
       classOf[SonarReviewPostJob],
       classOf[SonarBBPluginConfig],
       classOf[PullRequestProjectBuilder],
       classOf[BitbucketClient],
-      classOf[InputFileCacheSensor],
       classOf[ReviewCommentsCreator],
       classOf[IssuesOnChangedLinesFilter],
-      classOf[GitBaseDirResolver],
-      classOf[InputFileCache]
-    ).toList
+      classOf[GitBaseDirResolver]
+    )
   }
 
 }

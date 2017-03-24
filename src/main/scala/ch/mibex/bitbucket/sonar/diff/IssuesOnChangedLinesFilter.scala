@@ -1,28 +1,24 @@
 package ch.mibex.bitbucket.sonar.diff
 
-import ch.mibex.bitbucket.sonar.SonarBBPlugin
-import ch.mibex.bitbucket.sonar.cache.InputFileCache
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest}
 import ch.mibex.bitbucket.sonar.diff.GitDiffParser.{BinaryDiff, Diff, GitDiff}
-import ch.mibex.bitbucket.sonar.utils.LogUtils
-import org.slf4j.LoggerFactory
-import org.sonar.api.BatchComponent
-import org.sonar.api.batch.InstantiationStrategy
-import org.sonar.api.issue.Issue
+import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPlugin}
+import org.sonar.api.batch.postjob.issue.PostJobIssue
+import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
 
-
+@BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
-                                 inputFileCache: InputFileCache) extends BatchComponent {
-  private val logger = LoggerFactory.getLogger(getClass)
+                                 gitBaseDirResolver: GitBaseDirResolver) {
 
-  def filter(pullRequest: PullRequest, newIssues: Seq[Issue]): Seq[Issue] = {
+  def filter(pullRequest: PullRequest, newIssues: Seq[PostJobIssue]): Seq[PostJobIssue] = {
     val pullRequestDiff = bitbucketClient.getPullRequestDiff(pullRequest)
     val diffs = parseOrFail(pullRequestDiff)
+
     val issuesOnChangedLines = newIssues filter { i =>
       val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
 
-      inputFileCache.resolveRepoRelativePath(i.componentKey()) match {
+      gitBaseDirResolver.getRepositoryRelativePath(i) match {
         case Some(filePath) =>
           val isIssueOnChangedLines = (diff: Diff) => diff match {
             case diff: GitDiff =>
@@ -31,9 +27,7 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
             case binary: BinaryDiff => false
           }
           diffs.exists(isIssueOnChangedLines)
-        case None =>
-          logger.warn(LogUtils.f(s"Could not resolve path for ${i.componentKey()}"))
-          false  // ignore these issues
+        case None => false // ignore non-file issues
       }
     }
 
@@ -58,8 +52,7 @@ class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
   private def parseOrFail(diff: String) = GitDiffParser.parse(diff) match {
     case Left(parsingFailure) =>
       throw new RuntimeException(s"${SonarBBPlugin.PluginLogPrefix} Failed to parse diff: ${parsingFailure.reason}")
-    case Right(gitDiffs) =>
-      gitDiffs
+    case Right(gitDiffs) => gitDiffs
   }
 
 }

@@ -2,12 +2,11 @@ package ch.mibex.bitbucket.sonar.client
 
 import javax.ws.rs.core.{HttpHeaders, MediaType}
 
+import ch.mibex.bitbucket.sonar.utils.JsonUtils
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
-import ch.mibex.bitbucket.sonar.utils.{LogUtils, JsonUtils}
 import com.sun.jersey.api.client.filter.{ClientFilter, HTTPBasicAuthFilter}
 import com.sun.jersey.api.client.{Client, ClientRequest, ClientResponse}
 import com.sun.jersey.core.util.MultivaluedMapImpl
-import org.slf4j.LoggerFactory
 
 
 // either use the API key from the team like this:
@@ -59,7 +58,6 @@ class AuthenticationBinder {
 }
 
 class ClientAuthentication(config: SonarBBPluginConfig) {
-  private val logger = LoggerFactory.getLogger(getClass)
 
   def configure(client: Client): Unit = {
     if (isUserOauth) {

@@ -1,16 +1,16 @@
 package ch.mibex.bitbucket.sonar.review
 
-import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig, SonarBBPlugin$}
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import org.junit.runner.RunWith
+import org.sonar.api.batch.postjob.issue.PostJobIssue
+import org.sonar.api.batch.rule.Severity
 import org.sonar.api.config.{PropertyDefinitions, Settings}
-import org.sonar.api.issue.Issue
 import org.sonar.api.platform.Server
-import org.sonar.api.rule.{RuleKey, Severity}
+import org.sonar.api.rule.RuleKey
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import org.specs2.specification.Scope
-import org.mockito.Answers.RETURNS_DEEP_STUBS
 @RunWith(classOf[JUnitRunner])
 class PullRequestResultsSpec extends Specification with Mockito {
 
@@ -34,19 +34,19 @@ class PullRequestResultsSpec extends Specification with Mockito {
     "yield issue report for found issues and deny approval due to blocker issue" in new SettingsContext {
       val results = new PullRequestReviewResults(pluginConfig)
 
-      val issue1 = mock[Issue]
+      val issue1 = mock[PostJobIssue]
       issue1.severity() returns Severity.INFO
       issue1.message() returns "Either remove or fill this block of code."
       issue1.ruleKey() returns RuleKey.parse("squid:S00108")
       results.issueFound(issue1)
 
-      val issue2 = mock[Issue]
+      val issue2 = mock[PostJobIssue]
       issue2.severity() returns Severity.MAJOR
       issue2.message() returns """Remove this unused "f" local variable."""
       issue2.ruleKey() returns RuleKey.parse("squid:S1481")
       results.issueFound(issue2)
 
-      val issue3 = mock[Issue]
+      val issue3 = mock[PostJobIssue]
       issue3.severity() returns Severity.BLOCKER
       issue3.message() returns """Remove this "Double.longBitsToDouble" call."""
       issue3.ruleKey() returns RuleKey.parse("squid:S2127")

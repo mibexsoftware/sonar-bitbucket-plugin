@@ -5,33 +5,30 @@ import java.net.URLEncoder
 
 import ch.mibex.bitbucket.sonar.SonarBBPlugin
 import org.sonar.api.CoreProperties
+import org.sonar.api.batch.postjob.issue.PostJobIssue
+import org.sonar.api.batch.rule.Severity
 import org.sonar.api.config.Settings
-import org.sonar.api.issue.Issue
-import org.sonar.api.rule.{RuleKey, Severity}
-import scala.collection.JavaConverters._
+import org.sonar.api.rule.RuleKey
+
 import scala.collection.mutable
 
 object SonarUtils {
-  val LegalBranchNameReplacementChars = """[0-9a-zA-Z:\-_.]*"""
-  private val SeverityImagesRootUrl =
+  final val LegalBranchNameReplacementChars = """[0-9a-zA-Z:\-_.]*"""
+  final val SeverityImagesRootUrl =
     """https://raw.githubusercontent.com/mibexsoftware/
-      |sonar-bitbucket-plugin/master/src/main/resources/images/severity""".stripMargin.replaceAll("\n", "")
+      |sonar-bitbucket-plugin/master/src/main/resources/images/severity""".stripMargin.replaceAll("\r?\n", "")
 
-  def isSeverityGreaterOrEqual(issue: Issue, referenceSeverity: String): Boolean = {
-    val severities = Severity.ALL.asScala
-    val issueSeverityIdx = severities.indexOf(issue.severity())
-    val referenceSeverityIdx = severities.indexOf(referenceSeverity)
-    require(issueSeverityIdx >= 0, s"${SonarBBPlugin.PluginLogPrefix} Unknown severity: ${issue.severity()}")
-    require(referenceSeverityIdx >= 0, s"${SonarBBPlugin.PluginLogPrefix} Unknown severity: $referenceSeverityIdx")
-    issueSeverityIdx >= referenceSeverityIdx
+  def isSeverityGreaterOrEqual(issue: PostJobIssue, referenceSeverity: Severity): Boolean = {
+    require(Option(issue.severity()).isDefined, s"${SonarBBPlugin.PluginLogPrefix} Unknown severity")
+    issue.severity().compareTo(referenceSeverity) >= 0
   }
 
-  def isLegalBranchNameReplacement(replacement: String): Boolean =
+  def isValidBranchNameReplacement(replacement: String): Boolean =
     replacement.matches(LegalBranchNameReplacementChars)
 
   def sonarMarkdownPrefix(): String = "**SonarQube Analysis**"
 
-  def renderAsMarkdown(issue: Issue, settings: Settings): String = {
+  def renderAsMarkdown(issue: PostJobIssue, settings: Settings): String = {
     val ruleLink = getRuleLink(issue.ruleKey(), settings)
     val sb = new mutable.StringBuilder()
     val severity = issue.severity()
@@ -68,6 +65,6 @@ object SonarUtils {
     }
   }
 
-  def toImageMarkdown(severity: String): String = s"![$severity]($SeverityImagesRootUrl/$severity.png)"
+  def toImageMarkdown(severity: Severity): String = s"![$severity]($SeverityImagesRootUrl/$severity.png)"
 
 }

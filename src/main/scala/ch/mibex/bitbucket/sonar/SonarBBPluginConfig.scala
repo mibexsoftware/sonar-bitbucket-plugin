@@ -1,45 +1,36 @@
 package ch.mibex.bitbucket.sonar
 
-import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
-import org.slf4j.LoggerFactory
-import org.sonar.api.BatchComponent
-import org.sonar.api.batch.InstantiationStrategy
+import ch.mibex.bitbucket.sonar.utils.SonarUtils
+import org.sonar.api.batch.rule.Severity
+import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
 import org.sonar.api.config.Settings
 import org.sonar.api.platform.Server
-import org.sonar.api.rule.Severity
+import org.sonar.api.utils.log.Loggers
 
-import scala.collection.JavaConverters._
-
+@BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchComponent {
-  private val logger = LoggerFactory.getLogger(getClass)
+class SonarBBPluginConfig(settings: Settings, server: Server) {
+  private val logger = Loggers.get(getClass)
 
-  def isEnabled: Boolean =
-    settings.hasKey(SonarBBPlugin.BitbucketAccountName)
+  def isEnabled: Boolean = settings.hasKey(SonarBBPlugin.BitbucketAccountName)
 
-  def accountName(): String =
-    settings.getString(SonarBBPlugin.BitbucketAccountName)
+  def accountName(): String = settings.getString(SonarBBPlugin.BitbucketAccountName)
 
-  def repoSlug(): String =
-    settings.getString(SonarBBPlugin.BitbucketRepoSlug)
+  def repoSlug(): String = settings.getString(SonarBBPlugin.BitbucketRepoSlug)
 
-  def teamName(): String =
-    settings.getString(SonarBBPlugin.BitbucketTeamName)
+  def teamName(): String = settings.getString(SonarBBPlugin.BitbucketTeamName)
 
-  def oauthTokenClientKey(): String =
-    settings.getString(SonarBBPlugin.BitbucketOAuthClientKey)
+  def oauthTokenClientKey(): String = settings.getString(SonarBBPlugin.BitbucketOAuthClientKey)
 
-  def oauthTokenClientSecret(): String =
-    settings.getString(SonarBBPlugin.BitbucketOAuthClientSecret)
+  def oauthTokenClientSecret(): String = settings.getString(SonarBBPlugin.BitbucketOAuthClientSecret)
 
-  def apiKey(): String =
-    settings.getString(SonarBBPlugin.BitbucketApiKey)
+  def apiKey(): String = settings.getString(SonarBBPlugin.BitbucketApiKey)
 
-  def minSeverity(): String =
-    settings.getString(SonarBBPlugin.SonarQubeMinSeverity)
+  def minSeverity(): String = settings.getString(SonarBBPlugin.SonarQubeMinSeverity)
 
-  def approveUnApproveEnabled(): Boolean =
-    settings.getBoolean(SonarBBPlugin.BitbucketApproveUnapprove)
+  def approveUnApproveEnabled(): Boolean = settings.getBoolean(SonarBBPlugin.BitbucketApproveUnapprove)
+
+  def buildStatusEnabled(): Boolean = settings.getBoolean(SonarBBPlugin.BitbucketBuildStatus)
 
   def branchName(): String = {
     var branchName = settings.getString(SonarBBPlugin.BitbucketBranchName)
@@ -52,44 +43,43 @@ class SonarBBPluginConfig(settings: Settings, server: Server) extends BatchCompo
     branchName
   }
 
-  def pullRequestId(): Int =
-    settings.getInt(SonarBBPlugin.BitbucketPullRequestId)
+  def pullRequestId(): Int = settings.getInt(SonarBBPlugin.BitbucketPullRequestId)
 
   private def branchIllegalCharReplacement() = // we cannot use "" as defaultValue with SonarQube settings
     Option(settings.getString(SonarBBPlugin.SonarQubeIllegalBranchCharReplacement)).getOrElse("")
 
-  def validate(): Boolean = {
-    if (!isEnabled) {
-      logger.info(LogUtils.f("Plug-in considered disabled as Bitbucket account name is not configured."))
-      return false
-    }
-    Option(server.getVersion) match {
-      case Some(version) =>
-        if (version.equals("5.1")) {
-          logger.error(LogUtils.f("SonarQube v5.1 is not supported because of issue SONAR-6398"))
-          return false
-        }
-      case None =>
-        logger.info(LogUtils.f("Version check not possible because server.getVersion returned null"))
-    }
-    require(isIllegalCharReplacementValid,
+  def validate(): Unit = {
+    require(
+      Option(server.getVersion).isDefined,
+      s"${SonarBBPlugin.PluginLogPrefix} Failed to determine SonarQube server version"
+    )
+    require(
+      server.getVersion != "5.1",
+      s"${SonarBBPlugin.PluginLogPrefix} SonarQube v5.1 is not supported because of issue SONAR-6398"
+    )
+    require(
+      SonarUtils.isValidBranchNameReplacement(branchIllegalCharReplacement()),
       s"""${SonarBBPlugin.PluginLogPrefix} Only the following characters
          |are allowed as replacement: ${SonarUtils.LegalBranchNameReplacementChars}""".stripMargin.replaceAll("\n", " ")
     )
-    require(Option(repoSlug()).nonEmpty, s"${SonarBBPlugin.PluginLogPrefix} A repository slug must be set")
-    require(Option(branchName()).nonEmpty || pullRequestId() != 0, s"${SonarBBPlugin.PluginLogPrefix} The branch to analyze or the pull request id must be given")
-    require(isValidAuthenticationGiven,
+    require(
+      Option(branchName()).nonEmpty || pullRequestId() != 0,
+      s"${SonarBBPlugin.PluginLogPrefix} The branch to analyze or the pull request ID must be given"
+    )
+    require(
+      isValidAuthenticationGiven,
       s"""${SonarBBPlugin.PluginLogPrefix} Either the name and API key for the Bitbucket team account
         |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
     )
     Option(minSeverity()) foreach { severity =>
-      require(Severity.ALL.asScala.contains(severity), s"${SonarBBPlugin.PluginLogPrefix} Invalid severity $severity")
+      try {
+        Severity.valueOf(severity)
+      } catch {
+        case _: IllegalArgumentException =>
+          throw new IllegalArgumentException(s"${SonarBBPlugin.PluginLogPrefix} Invalid severity $severity")
+      }
     }
-    true
   }
-
-  private def isIllegalCharReplacementValid =
-    SonarUtils.isLegalBranchNameReplacement(branchIllegalCharReplacement())
 
   private def isValidAuthenticationGiven =
     (Option(teamName()).nonEmpty && Option(apiKey()).nonEmpty) ||

@@ -1,33 +1,31 @@
 package ch.mibex.bitbucket.sonar.review
 
-import ch.mibex.bitbucket.sonar.SonarBBPluginConfig
-import ch.mibex.bitbucket.sonar.cache.InputFileCache
+import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest, PullRequestComment}
 import ch.mibex.bitbucket.sonar.diff.IssuesOnChangedLinesFilter
 import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
-import org.slf4j.LoggerFactory
-import org.sonar.api.BatchComponent
-import org.sonar.api.batch.InstantiationStrategy
+import org.sonar.api.batch.postjob.issue.PostJobIssue
+import org.sonar.api.batch.rule.Severity
+import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
 import org.sonar.api.config.Settings
-import org.sonar.api.issue.{Issue, ProjectIssues}
+import org.sonar.api.utils.log.Loggers
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-
+@BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-class ReviewCommentsCreator(projectIssues: ProjectIssues,
-                            bitbucketClient: BitbucketClient,
-                            inputFileCache: InputFileCache,
+class ReviewCommentsCreator(bitbucketClient: BitbucketClient,
                             pluginConfig: SonarBBPluginConfig,
                             settings: Settings,
-                            issuesOnChangedLinesFilter: IssuesOnChangedLinesFilter) extends BatchComponent {
-  private val logger = LoggerFactory.getLogger(getClass)
+                            gitBaseDirResolver: GitBaseDirResolver,
+                            issuesOnChangedLinesFilter: IssuesOnChangedLinesFilter) {
+  private val logger = Loggers.get(getClass)
 
   def createOrUpdateComments(pullRequest: PullRequest,
+                             allIssues: Iterable[PostJobIssue],
                              existingReviewComments: Seq[PullRequestComment],
                              pullRequestResults: PullRequestReviewResults): Map[Int, PullRequestComment] = {
-    val commentsToBeAdded = processIssues(pullRequest, pullRequestResults)
+    val commentsToBeAdded = processIssues(allIssues.toList, pullRequest, pullRequestResults)
     val (commentsByPathAndLine, commentsToDelete) = processExistingComments(existingReviewComments)
 
     commentsToBeAdded foreach { case (file, issuesByLine) =>
@@ -45,7 +43,6 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
           case _ =>
             createComment(pullRequest, file, line, issues.toString())
         }
-
       }
     }
 
@@ -53,16 +50,20 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
   }
 
   private def processExistingComments(existingReviewComments: Seq[PullRequestComment]) = {
+    def debugLog(inlineComments: Seq[PullRequestComment]) = {
+      if (logger.isDebugEnabled) {
+        logger.debug(LogUtils.f(s"Found ${inlineComments.size} existing inline comments:"))
+        inlineComments foreach { c =>
+          logger.debug(LogUtils.f(s"  - ${c.filePath}:${c.line}: ${c.content}"))
+        }
+      }
+    }
+
     val commentsByFileAndLine = new mutable.HashMap[String, mutable.Map[Int, PullRequestComment]]()
       .withDefaultValue(new mutable.HashMap[Int, PullRequestComment]())
     val reviewCommentsToBeDeleted = new mutable.HashMap[Int, PullRequestComment]()
     val inlineComments = existingReviewComments filter { _.isInline }
-    if (logger.isDebugEnabled) {
-      logger.debug(LogUtils.f(s"Found ${inlineComments.size} existing inline comments:"))
-      inlineComments foreach { c =>
-        logger.debug(LogUtils.f(s"  - ${c.filePath}:${c.line}: ${c.content}"))
-      }
-    }
+    debugLog(inlineComments)
 
     inlineComments foreach { c =>
       reviewCommentsToBeDeleted += c.commentId -> c
@@ -77,47 +78,41 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
     (commentsByFileAndLine, reviewCommentsToBeDeleted)
   }
 
-  private def processIssues(pullRequest: PullRequest, reviewResults: PullRequestReviewResults) = {
-    val issues = collectIssuesInProject()
-    // we only take new issues here because for the existing issues we would not get
-    // file information in the input file cache sensor
+  private def processIssues(issues: Seq[PostJobIssue],
+                            pullRequest: PullRequest,
+                            reviewResults: PullRequestReviewResults) = {
     val onlyNewIssues = issues.filter(_.isNew)
     // because of Bitbucket bug #11925, we cannot create issues on context lines, so we have to filter the issues for
     // new/changed lines to get the correct overall issue count for a pull request
     val issuesOnChangedLines = issuesOnChangedLinesFilter.filter(pullRequest, onlyNewIssues)
     debugLogIssueStatistics(issues, issuesOnChangedLines)
     val onlyIssuesWithMinSeverity = issuesOnChangedLines
-      .filter(i => SonarUtils.isSeverityGreaterOrEqual(i, pluginConfig.minSeverity()))
+      .filter(i => SonarUtils.isSeverityGreaterOrEqual(i, Severity.valueOf(pluginConfig.minSeverity())))
     val commentsToBeAdded = new mutable.HashMap[String, mutable.Map[Int, StringBuilder]]()
 
-    onlyIssuesWithMinSeverity foreach { i =>
-      inputFileCache.resolveRepoRelativePath(i.componentKey()) match {
+    onlyIssuesWithMinSeverity foreach { issue =>
+      gitBaseDirResolver.getRepositoryRelativePath(issue).foreach(filePath => {
+        // file level comments do not have a line number! we use 0 for them here
+        val lineNr = Option(issue.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
 
-        case Some(repoRelPath) =>
-          // file level comments do not have a line number! we use 0 for them here
-          val lineNr = Option(i.line()).flatMap(l => Option(l.toInt)).getOrElse(0)
+        if (!commentsToBeAdded.contains(filePath)) {
+          commentsToBeAdded(filePath) = new mutable.HashMap[Int, StringBuilder]()
+        }
 
-          if (!commentsToBeAdded.contains(repoRelPath)) {
-            commentsToBeAdded(repoRelPath) = new mutable.HashMap[Int, StringBuilder]()
-          }
+        if (!commentsToBeAdded(filePath).contains(lineNr)) {
+          commentsToBeAdded(filePath) += lineNr -> new StringBuilder(SonarUtils.sonarMarkdownPrefix())
+        }
 
-          if (!commentsToBeAdded(repoRelPath).contains(lineNr)) {
-            commentsToBeAdded(repoRelPath) += lineNr -> new StringBuilder(SonarUtils.sonarMarkdownPrefix())
-          }
+        commentsToBeAdded(filePath)(lineNr).append("\n\n" + SonarUtils.renderAsMarkdown(issue, settings))
 
-          commentsToBeAdded(repoRelPath)(lineNr).append("\n\n" + SonarUtils.renderAsMarkdown(i, settings))
-
-          reviewResults.issueFound(i)
-        case None =>
-          logger.warn(LogUtils.f(s"Could not resolve path for ${i.componentKey()}"))
-      }
-
+        reviewResults.issueFound(issue)
+      })
     }
 
     commentsToBeAdded.toMap
   }
 
-  private def debugLogIssueStatistics(issues: Seq[Issue], issuesOnChangedLines: Seq[Issue]) {
+  private def debugLogIssueStatistics(issues: Seq[PostJobIssue], issuesOnChangedLines: Seq[PostJobIssue]) {
     if (logger.isDebugEnabled) {
       logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.count(_.isNew)} of them are new:"))
       issues.filter(_.isNew) foreach { i =>
@@ -149,11 +144,5 @@ class ReviewCommentsCreator(projectIssues: ProjectIssues,
       message = message
     )
   }
-
-  private def collectIssuesInProject() =
-    projectIssues
-      .issues()
-      .asScala
-      .toSeq
 
 }
