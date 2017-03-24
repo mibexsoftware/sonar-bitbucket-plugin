@@ -99,27 +99,15 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
 
   "plug-in configuration validation" should {
 
-    "consider plug-in as being inactive when account is not set" in new SettingsContext {
-      pluginConfig.validate() must beFalse
-    }
-
     "not allow unsupported SonarQube version 5.1" in new SettingsContext {
       server.getVersion returns "5.1"
       val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
-      invalidPluginConfig.validate() must beFalse
+      pluginConfig.validate() must throwA(
+        new IllegalArgumentException(
+          "requirement failed: [sonar4bitbucket] SonarQube v5.1 is not supported because of issue SONAR-6398"
+        )
+      )
     }
-
-    "ignore when getVersion returns null" in new SettingsContext {
-      server.getVersion returns null
-      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
-      settings.setProperty(SonarBBPlugin.BitbucketApiKey, "xxxxxxxxx")
-      settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
-      settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
-      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
-      val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
-      invalidPluginConfig.validate() must beTrue
-    }
-
 
     "validate for team API based authentication" in new SettingsContext {
       settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
@@ -127,7 +115,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
       settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
       settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
-      pluginConfig.validate() must beTrue
+      pluginConfig.validate()
     }
 
     "validate for user OAuth based authentication" in new SettingsContext {
@@ -136,7 +124,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
-      pluginConfig.validate() must beTrue
+      pluginConfig.validate()
     }
 
     "not accept wrong severity level" in new SettingsContext {
@@ -147,7 +135,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
       settings.setProperty(SonarBBPlugin.SonarQubeMinSeverity, "UNKNOWN")
       pluginConfig.validate() must throwA(
-        new IllegalArgumentException("requirement failed: [sonar4bitbucket] Invalid severity UNKNOWN")
+        new IllegalArgumentException("[sonar4bitbucket] Invalid severity UNKNOWN")
       )
     }
 
@@ -184,17 +172,9 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
       pluginConfig.validate() must throwA(
-        new IllegalArgumentException("requirement failed: [sonar4bitbucket] The branch to analyze or the pull request id must be given")
-      )
-    }
-
-    "not accept when no repository slug is given" in new SettingsContext {
-      settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
-      settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
-      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
-      settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
-      pluginConfig.validate() must throwA(
-        new IllegalArgumentException("requirement failed: [sonar4bitbucket] A repository slug must be set")
+        new IllegalArgumentException(
+          "requirement failed: [sonar4bitbucket] The branch to analyze or the pull request ID must be given"
+        )
       )
     }
 
