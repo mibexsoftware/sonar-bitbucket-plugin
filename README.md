@@ -2,21 +2,25 @@
 
 ![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)
 
+
 ### Download it from [Github releases page](https://github.com/mibexsoftware/sonar-bitbucket-plugin/releases/latest)
 
 This SonarQube plug-in creates pull request comments for issues found in your Bitbucket Cloud pull requests. It is very
 similar and inspired by the [SonarQube Github plug-in](https://github.com/SonarCommunity/sonar-github), but targets 
 Bitbucket Cloud. It creates a summary of the found issues as a global pull request comment which looks like this:
 
-![Screenshot global pull request comment plugin](doc/global-comment.png)
+![Screenshot global pull request comment](doc/global-comment.png)
 
 For every found issue on changed or new lines of the pull request, it will also create a pull request comment with
 the severity, the explanation what this issue is about and a link to get more details about it:
 
-![Screenshot global pull request comment plugin](doc/example-issue.png)
+![Screenshot exampl pull request comment](doc/example-issue.png)
 
+And it can also approve/unapprove the pull request and update the build status according to the SonarQube analysis
+results (if there are any blocker or critical issues found, the build is considered failed and the pull request
+unapproved):
 
-### This plug-in only supports SonarQube's "preview/issues" mode for analyzing your pull request branches. You cannot use it with "publish" (persistent) mode! 
+![Screenshot build status](doc/build-status-update.png)
 
 ## Usage
 
@@ -25,6 +29,10 @@ the severity, the explanation what this issue is about and a link to get more de
 the plug-in from working correctly; see https://jira.sonarsource.com/browse/SONAR-6398; please use 5.1.2 instead)
 - A Bitbucket account
 - Maven 3.x + JDK 1.7 (to manually build it)
+
+### Important facts
+- This plug-in only supports Git repositories.
+- It can only be run in SonarQube's "preview/issues" mode. You cannot use it with "publish" (persistent) mode! 
 
 ### Installation
 
@@ -86,6 +94,7 @@ See this table about the possible configuration options:
 | sonar.bitbucket.branchIllegalCharReplacement | If you are using SonarQube version <= 4.5, then you have to escape '/' in your branch names with another character. Please provide this replacement character here.                                                            |                                                | _                      |
 | sonar.bitbucket.minSeverity                  | Either INFO, MINOR, MAJOR, CRITICAL or BLOCKER to only have pull request comments created for issues with severities greater or equal to the chosen severity.                                                                  | MAJOR                                          | CRITICAL               |
 | sonar.bitbucket.approvalFeatureEnabled       | If enabled, the plug-in will approve the pull request if there are no critical and no blocker issues, otherwise it will unapprove the pull request.                                                                            | true                                           | false                  |
+| sonar.bitbucket.buildStatusEnabled           | If enabled, the plug-in will update the build status of the pull request depending on the Sonar analysis result. The analysis and also the build is failed if there are any critical or blocker issues.                        | true                                           | false                  |
 
 
 For authentication, you have to decide between if you want to create pull requests under your own user by using OAuth 
