@@ -8,6 +8,7 @@ import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
 import org.sonar.api.CoreProperties
 import org.sonar.api.batch.CheckProject
 import org.sonar.api.batch.postjob.{PostJob, PostJobContext, PostJobDescriptor}
+import org.sonar.api.config.Settings
 import org.sonar.api.resources.Project
 import org.sonar.api.utils.log.Loggers
 
@@ -28,9 +29,12 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
   }
 
   private def getProjectUrl(context: PostJobContext, pullRequest: PullRequest) =
-    context.settings().getString(CoreProperties.SERVER_BASE_URL) + "/dashboard?id=" +
+    getSonarBaseUrl(context.settings()) + "/dashboard?id=" +
       context.settings().getString(CoreProperties.PROJECT_KEY_PROPERTY) + ":" +
       URLEncoder.encode(pullRequest.srcBranch, "UTF-8")
+
+  private def getSonarBaseUrl(settings: Settings) =
+    Option(settings.getString(CoreProperties.SERVER_BASE_URL)).getOrElse(settings.getString("sonar.host.url"))
 
   private def handlePullRequest(context: PostJobContext, pullRequest: PullRequest) {
     setBuildStatus(InProgressBuildStatus, context, pullRequest)
