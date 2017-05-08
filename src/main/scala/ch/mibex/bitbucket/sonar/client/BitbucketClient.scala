@@ -15,7 +15,11 @@ import org.sonar.api.utils.log.Loggers
 import scala.collection.mutable
 
 
-case class PullRequest(id: Int, srcBranch: String, srcCommitHash: Option[String], dstCommitHash: Option[String])
+case class PullRequest(id: Int,
+                       srcBranch: String,
+                       srcCommitHref: Option[String],
+                       srcCommitHash: Option[String],
+                       dstCommitHash: Option[String])
 
 // global comments do not have a file path, and file-level comments do not require a line number
 case class PullRequestComment(commentId: Int, content: String, line: Option[Int], filePath: Option[String]) {
@@ -89,7 +93,9 @@ class BitbucketClient(config: SonarBBPluginConfig) {
 
   private def mapToPullRequest(pullRequest: Map[String, Any]): PullRequest = {
     val source = pullRequest("source").asInstanceOf[Map[String, Any]]
-    val srcHash = Option(source("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
+    val commit = source("commit").asInstanceOf[Map[String, Any]]
+    val srcHref = Option(commit("links").asInstanceOf[Map[String, Any]]("self").asInstanceOf[Map[String, Any]]("href").asInstanceOf[String])
+    val srcHash = Option(commit("hash").asInstanceOf[String])
     val dest = pullRequest("destination").asInstanceOf[Map[String, Any]]
     val dstHash = Option(dest("commit")).map(c => c.asInstanceOf[Map[String, Any]]("hash").asInstanceOf[String])
     val branch = source("branch").asInstanceOf[Map[String, Any]]
@@ -97,6 +103,7 @@ class BitbucketClient(config: SonarBBPluginConfig) {
     PullRequest(
       id = pullRequest("id").asInstanceOf[Int],
       srcBranch = branch("name").asInstanceOf[String],
+      srcCommitHref = srcHref,
       srcCommitHash = srcHash,
       dstCommitHash = dstHash
     )
@@ -199,16 +206,30 @@ class BitbucketClient(config: SonarBBPluginConfig) {
   }
 
   def updateBuildStatus(pullRequest: PullRequest, buildStatus: BuildStatus, sonarServerUrl: String): Unit = {
-    v2Api
-      .path(s"/commit/${pullRequest.srcCommitHash.getOrElse("")}/statuses/build")
-      .`type`(MediaType.APPLICATION_JSON)
-      .accept(MediaType.APPLICATION_JSON)
-      .entity(JsonUtils.map2Json(Map("state" -> buildStatus.name,
-                                     "description" -> buildStatus.description,
-                                     "name" -> "Sonar analysis",
-                                     "key" -> s"SONAR-ANALYSIS-PR-${pullRequest.id}",
-                                     "url" -> sonarServerUrl)))
-      .post()
+    try {
+      // This uses the source url from the bitbucket response.
+      // Typically pullrequests' source is not the same repo as where the PR was created.
+      // Usually PR's have a fork as source, which means a different accountName and repoSlug
+      val v2SourceApi = client.resource(
+        s"${pullRequest.srcCommitHref.getOrElse(v2Api.path(s"/commit/${pullRequest.srcCommitHash.getOrElse("")}"))}"
+      )
+      v2SourceApi
+        .path(s"/statuses/build")
+        .`type`(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .entity(JsonUtils.map2Json(Map("state" -> buildStatus.name,
+                                       "description" -> buildStatus.description,
+                                       "name" -> "Sonar analysis",
+                                       "key" -> s"SONAR-ANALYSIS-PR-${pullRequest.id}",
+                                       "url" -> sonarServerUrl)))
+        .post()
+     } catch {
+       case e: UniformInterfaceException =>
+         throw new IllegalArgumentException(
+           s"${SonarBBPlugin.PluginLogPrefix} " +
+           s"${pullRequest.srcCommitHref}/statuses/build resulted in error: " + e.getResponse.getStatus
+         )
+     }
   }
 
   def approve(pullRequest: PullRequest): Unit = {

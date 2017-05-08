@@ -24,7 +24,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
   "filter" should {
 
     "only yield issues on changed lines in complex diff" in new ComplexIssueContext {
-      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHash = None, dstCommitHash = None)
+      val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHref = None, srcCommitHash = None, dstCommitHash = None)
       bitbucketClient.getPullRequestDiff(pullRequest) returns readFile("/diffs/5diffs-example.diff")
       val issuesNotOnChangedLines = Set(issue1, issue5, issue6, issue7)
       val expectedIssues = issues diff issuesNotOnChangedLines
@@ -36,7 +36,7 @@ class IssuesOnChangedLinesFilterSpec extends Specification with Mockito {
     }
 
     "yield no issues when none in diff" in new NoNewIssuesContext {
-      val pullRequest = PullRequest(id = 2, srcBranch = "develop", srcCommitHash = None, dstCommitHash = None)
+      val pullRequest = PullRequest(id = 2, srcBranch = "develop", srcCommitHref = None, srcCommitHash = None, dstCommitHash = None)
       bitbucketClient.getPullRequestDiff(pullRequest) returns readFile("/diffs/2diffs-example.diff")
       val issuesOnChangedLinesFilter = new IssuesOnChangedLinesFilter(bitbucketClient, gitBaseDirResolver)
 
