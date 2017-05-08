@@ -15,7 +15,11 @@ import org.sonar.api.utils.log.Loggers
 import scala.collection.mutable
 
 
-case class PullRequest(id: Int, srcBranch: String, srcCommitHref: Option[String], srcCommitHash: Option[String], dstCommitHash: Option[String])
+case class PullRequest(id: Int,
+                       srcBranch: String,
+                       srcCommitHref: Option[String],
+                       srcCommitHash: Option[String],
+                       dstCommitHash: Option[String])
 
 // global comments do not have a file path, and file-level comments do not require a line number
 case class PullRequestComment(commentId: Int, content: String, line: Option[Int], filePath: Option[String]) {
@@ -201,12 +205,14 @@ class BitbucketClient(config: SonarBBPluginConfig) {
     response.getStatus == 200
   }
 
-  // This uses the source url from the bitbucket response.
-  // Typically pullrequests' source is not the same repo as where the PR was created.
-  // Usually PR's have a fork as source, which means a different accountName and repoSlug
   def updateBuildStatus(pullRequest: PullRequest, buildStatus: BuildStatus, sonarServerUrl: String): Unit = {
     try {
-      val v2SourceApi = client.resource(s"${pullRequest.srcCommitHref.getOrElse(v2Api.path(s"/commit/${pullRequest.srcCommitHash.getOrElse("")}"))}")
+      // This uses the source url from the bitbucket response.
+      // Typically pullrequests' source is not the same repo as where the PR was created.
+      // Usually PR's have a fork as source, which means a different accountName and repoSlug
+      val v2SourceApi = client.resource(
+        s"${pullRequest.srcCommitHref.getOrElse(v2Api.path(s"/commit/${pullRequest.srcCommitHash.getOrElse("")}"))}"
+      )
       v2SourceApi
         .path(s"/statuses/build")
         .`type`(MediaType.APPLICATION_JSON)
@@ -219,7 +225,10 @@ class BitbucketClient(config: SonarBBPluginConfig) {
         .post()
      } catch {
        case e: UniformInterfaceException =>
-         throw new IllegalArgumentException(s"${pullRequest.srcCommitHref}/statuses/build resulted in error " + e.getResponse.getStatus)
+         throw new IllegalArgumentException(
+           s"${SonarBBPlugin.PluginLogPrefix} " +
+           s"${pullRequest.srcCommitHref}/statuses/build resulted in error: " + e.getResponse.getStatus
+         )
      }
   }
 
