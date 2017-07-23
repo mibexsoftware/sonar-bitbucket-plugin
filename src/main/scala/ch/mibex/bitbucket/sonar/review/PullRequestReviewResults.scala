@@ -18,8 +18,11 @@ class PullRequestReviewResults(pluginConfiguration: SonarBBPluginConfig) {
 
   def calculateBuildStatus(): BuildStatus =
     if (canBeApproved) SuccessfulBuildstatus
-    else FailingBuildStatus(numCritical = newIssuesBySeverity(Severity.CRITICAL),
-                            numBlocker = newIssuesBySeverity(Severity.BLOCKER))
+    else {
+      val levelString = pluginConfiguration.sonarApprovalSeverityLevel();
+      val level = Severity.valueOf(levelString);
+      FailingBuildStatus(s"Found issues >= $level");
+    }
 
   def formatAsMarkdown(): String = {
     val markdown = new StringBuilder()
@@ -49,10 +52,19 @@ class PullRequestReviewResults(pluginConfiguration: SonarBBPluginConfig) {
     )
   }
 
-  def canBeApproved: Boolean =
-    // there does not seam to be a way to check the quality gates in preview mode, so we make an assumption about
-    // what users would consider good quality here :-)
-    newIssuesBySeverity(Severity.CRITICAL) == 0 && newIssuesBySeverity(Severity.BLOCKER) == 0
+  def canBeApproved: Boolean = {
+    val levelString = pluginConfiguration.sonarApprovalSeverityLevel();
+    val level = Severity.valueOf(levelString);
+    val allLevels = Severity.values();
+    val index = allLevels.indexOf(level);
+
+    newIssuesBySeverity.keys.filter((severity)=> {
+      index >= allLevels.indexOf(severity);
+    }).filter((severity)=> {
+       newIssuesBySeverity(severity) > 0;
+    }).size == 0 ;
+  }
+
 
   private def printNewIssuesForMarkdown(sb: StringBuilder, severity: Severity) = {
     val issueCount = newIssuesBySeverity(severity)
