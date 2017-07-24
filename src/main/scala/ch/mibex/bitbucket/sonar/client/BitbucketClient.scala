@@ -89,7 +89,7 @@ class BitbucketClient(config: SonarBBPluginConfig) {
   }
 
   private def createResource(apiVersion: String) =
-    client.resource(s"https://bitbucket.org/api/$apiVersion/repositories/${config.accountName()}/${config.repoSlug()}")
+    client.resource(s"https://api.bitbucket.org/$apiVersion/repositories/${config.accountName()}/${config.repoSlug()}")
 
   private def mapToPullRequest(pullRequest: Map[String, Any]): PullRequest = {
     val source = pullRequest("source").asInstanceOf[Map[String, Any]]
@@ -326,7 +326,7 @@ class BitbucketClient(config: SonarBBPluginConfig) {
   private def getLoggedInUserUUID: String = {
     try {
       val response = client
-        .resource(s"https://bitbucket.org/api/2.0/user")
+        .resource(s"https://api.bitbucket.org/2.0/user")
         .accept(MediaType.APPLICATION_JSON)
         .get(classOf[String])
       val user = JsonUtils.mapFromJson(response)
