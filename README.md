@@ -1,6 +1,6 @@
 # Bitbucket Cloud plug-in for SonarQube
 
-![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)
+[![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin)
 
 
 ### Download it from [Github releases page](https://github.com/mibexsoftware/sonar-bitbucket-plugin/releases/latest)
