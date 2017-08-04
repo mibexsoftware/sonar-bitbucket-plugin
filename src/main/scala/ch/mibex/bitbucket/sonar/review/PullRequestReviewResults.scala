@@ -59,7 +59,7 @@ class PullRequestReviewResults(pluginConfiguration: SonarBBPluginConfig) {
     val index = allLevels.indexOf(level);
 
     newIssuesBySeverity.keys.filter((severity)=> {
-      index >= allLevels.indexOf(severity);
+      allLevels.indexOf(severity) >= index;
     }).filter((severity)=> {
        newIssuesBySeverity(severity) > 0;
     }).size == 0 ;
