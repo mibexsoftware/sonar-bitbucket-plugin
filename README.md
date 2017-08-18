@@ -130,6 +130,33 @@ clean verify sonar:sonar --batch-mode --errors \
      -Dsonar.analysis.mode=issues
 ```
 
+### Configuration with Bitbucket Pipelines
+
+To configure for use with [Bitbucket Pipelines](https://bitbucket.org/product/features/pipelines) You will need to add the following [environment variables](https://confluence.atlassian.com/bitbucket/environment-variables-794502608.html):
+ - OAUTH_CLIENT_KEY
+ - OAUTH_CLIENT_SECRET
+ - SONAR_HOST_URL
+ - SONAR_LOGIN
+ - SONAR_PASSWORD 
+ 
+The minimal configuration for Pipelines is as follows:
+
+```
+# The Sonar Bitbucket plug-in will run on the default Pipeline.
+# -----
+image: maven:3.5.0
+
+pipelines:
+  default:
+    - step:
+        script:
+          - mvn clean test
+          - mvn sonar:sonar --batch-mode --errors -Dsonar.bitbucket.repoSlug=$BITBUCKET_REPO_SLUG -Dsonar.bitbucket.accountName=$BITBUCKET_REPO_OWNER -Dsonar.bitbucket.oauthClientKey=$OAUTH_CLIENT_KEY -Dsonar.bitbucket.oauthClientSecret=$OAUTH_CLIENT_SECRET -Dsonar.bitbucket.branchName=$BITBUCKET_BRANCH -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.password=$SONAR_PASSWORD -Dsonar.analysis.mode=issues
+```
+
+Note: The Pipeline must run at least once after the pull request is created.
+
+
 ### Configuration with SonarRunner
 
 The configuration of the SonarRunner parameters is actually the same as with Maven. Just run SonarRunner like follows:
