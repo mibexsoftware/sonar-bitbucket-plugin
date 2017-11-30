@@ -16,13 +16,13 @@ class PullRequestReviewResults(pluginConfiguration: SonarBBPluginConfig) {
     newIssuesBySeverity += (issue.severity() -> (newIssuesBySeverity(issue.severity()) + 1))
   }
 
-  def calculateBuildStatus(): BuildStatus =
-    if (canBeApproved) SuccessfulBuildstatus
-    else {
-      val levelString = pluginConfiguration.sonarApprovalSeverityLevel();
-      val level = Severity.valueOf(levelString);
-      FailingBuildStatus(s"Found issues >= $level");
-    }
+  def calculateBuildStatus(): BuildStatus = {
+    val issuesWithAboveMaxSeverity = countIssuesWithAboveMaxSeverity
+    if (issuesWithAboveMaxSeverity == 0)
+      SuccessfulBuildstatus
+    else
+      FailingBuildStatus(Severity.valueOf(pluginConfiguration.sonarApprovalSeverityLevel()), issuesWithAboveMaxSeverity)
+  }
 
   def formatAsMarkdown(): String = {
     val markdown = new StringBuilder()
@@ -52,19 +52,14 @@ class PullRequestReviewResults(pluginConfiguration: SonarBBPluginConfig) {
     )
   }
 
-  def canBeApproved: Boolean = {
-    val levelString = pluginConfiguration.sonarApprovalSeverityLevel();
-    val level = Severity.valueOf(levelString);
-    val allLevels = Severity.values();
-    val index = allLevels.indexOf(level);
-
-    newIssuesBySeverity.keys.filter((severity)=> {
-      allLevels.indexOf(severity) >= index;
-    }).filter((severity)=> {
-       newIssuesBySeverity(severity) > 0;
-    }).size == 0 ;
+  def countIssuesWithAboveMaxSeverity: Int = {
+    val level = Severity.valueOf(pluginConfiguration.sonarApprovalSeverityLevel())
+    val allLevels = Severity.values()
+    val maxIndexLevel = allLevels.indexOf(level)
+    newIssuesBySeverity
+      .filter { case(severity, numIssues) => allLevels.indexOf(severity) >= maxIndexLevel }
+      .foldLeft(0)(_ + _._2)
   }
-
 
   private def printNewIssuesForMarkdown(sb: StringBuilder, severity: Severity) = {
     val issueCount = newIssuesBySeverity(severity)

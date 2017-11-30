@@ -28,7 +28,7 @@ class PullRequestResultsSpec extends Specification with Mockito {
         """**SonarQube Analysis** reported no issues. Take a chocolate :-)
           |
           |Note that only issues with severity >= ![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) (major) are reported.""".stripMargin
-      results.canBeApproved must beTrue
+      results.countIssuesWithAboveMaxSeverity must_== 0
     }
 
     "yield issue report for found issues and deny approval due to blocker issue" in new SettingsContext {
@@ -63,7 +63,7 @@ class PullRequestResultsSpec extends Specification with Mockito {
           |Watch the comments in this pull request to review them. Note that only issues with severity >=
           |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) (major)
           |are reported.""".stripMargin).ignoreSpace
-      results.canBeApproved must beFalse
+      results.countIssuesWithAboveMaxSeverity must_== 1 // default is CRITICAL
     }
 
   }

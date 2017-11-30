@@ -23,7 +23,7 @@ object SonarBBPlugin {
   final val BitbucketOAuthClientSecret = "sonar.bitbucket.oauthClientSecret"
   final val BitbucketApproveUnapprove = "sonar.bitbucket.approvalFeatureEnabled"
   final val BitbucketBuildStatus = "sonar.bitbucket.buildStatusEnabled"
-  final val SonarApprovalSeverityLevel = "sonar.bitbucket.sonarApprovalSeverityLevel"
+  final val SonarUnapprovalSeverityLevel = "sonar.bitbucket.maxSeverityApprovalLevel"
 }
 
 
@@ -104,10 +104,18 @@ object SonarBBPlugin {
     ),
     new Property(
       key = SonarBBPlugin.BitbucketApproveUnapprove,
-      name = "Approve / Unapprove pull request if there are critical or blocker issues.",
+      name = "Approve / Unapprove pull request if there are issues with severity >= " +
+        SonarBBPlugin.SonarUnapprovalSeverityLevel + ".",
       defaultValue = "true",
-      description = "If enabled, the plug-in will approve the pull request if there are no critical and no " +
-        "blocker issues, otherwise it will unapprove the pull request.",
+      description = "If enabled, the plug-in will approve the pull request if there are no issues with severity >= " +
+        SonarBBPlugin.SonarUnapprovalSeverityLevel + ", otherwise it will unapprove the pull request.",
+      global = true
+    ),
+    new Property(
+      key = SonarBBPlugin.SonarUnapprovalSeverityLevel,
+      name = "The severity level to look for to determine to Auto-Unapprove",
+      defaultValue = Severity.CRITICAL,
+      description = "If any issues of this level or higher are found, it will unapprove the pull request.",
       global = true
     ),
     new Property(
@@ -116,13 +124,6 @@ object SonarBBPlugin {
       defaultValue = "true",
       description = "If enabled, the plug-in will update the build status of the pull request depending on the " +
         "Sonar analysis result. The analysis and also the build is failed if there are any critical or blocker issues.",
-      global = true
-    ),
-    new Property(
-      key = SonarBBPlugin.SonarApprovalSeverityLevel,
-      name = "The issue level to look for to determine to Auto-Approve",
-      defaultValue = Severity.CRITICAL,
-      description = "If any issues of this level or higher are found, it will un approve a PR ",
       global = true
     )
   )

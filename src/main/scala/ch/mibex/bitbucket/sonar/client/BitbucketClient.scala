@@ -9,6 +9,7 @@ import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
 import com.sun.jersey.client.urlconnection.{HttpURLConnectionFactory, URLConnectionClientHandler}
+import org.sonar.api.batch.rule.Severity
 import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
 import org.sonar.api.utils.log.Loggers
 
@@ -30,9 +31,9 @@ sealed trait BuildStatus {
   def name: String
   def description: String
 }
-case class FailingBuildStatus(failedMessage: String) extends BuildStatus {
+case class FailingBuildStatus(severity: Severity, numIssues: Int) extends BuildStatus {
   val name = "FAILED"
-  val description = failedMessage
+  val description = s"Sonar analysis failed. Found $numIssues issues with severity >= $severity"
 }
 
 case object InProgressBuildStatus extends BuildStatus {

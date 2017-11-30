@@ -85,7 +85,7 @@ class SonarReviewPostJob(
 
   private def approveOrUnapproveIfEnabled(pullRequest: PullRequest, report: PullRequestReviewResults) {
     if (pluginConfig.approveUnApproveEnabled()) {
-      if (report.canBeApproved) bitbucketClient.approve(pullRequest)
+      if (report.countIssuesWithAboveMaxSeverity == 0) bitbucketClient.approve(pullRequest)
       else bitbucketClient.unApprove(pullRequest)
     }
   }
