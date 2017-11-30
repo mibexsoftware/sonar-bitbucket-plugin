@@ -8,9 +8,8 @@ import com.sun.jersey.api.client.{Client, ClientResponse, WebResource}
 import com.sun.jersey.core.util.MultivaluedMapImpl
 import org.junit.runner.RunWith
 import org.mockito
-import org.sonar.api.platform.Server
-
 import org.sonar.api.config.{PropertyDefinitions, Settings}
+import org.sonar.api.platform.Server
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner

@@ -3,7 +3,7 @@ package ch.mibex.bitbucket.sonar
 
 import ch.mibex.bitbucket.sonar.client.BitbucketClient
 import ch.mibex.bitbucket.sonar.diff.IssuesOnChangedLinesFilter
-import ch.mibex.bitbucket.sonar.review.{PullRequestProjectBuilder, ReviewCommentsCreator, SonarReviewPostJob}
+import ch.mibex.bitbucket.sonar.review.{PullRequestProjectBuilder, ReviewCommentsHandler, SonarReviewPostJob}
 import org.sonar.api.Plugin.Context
 import org.sonar.api.{PropertyType, _}
 import org.sonar.api.rule.Severity
@@ -127,7 +127,7 @@ class SonarBBPlugin extends Plugin {
       classOf[SonarBBPluginConfig],
       classOf[PullRequestProjectBuilder],
       classOf[BitbucketClient],
-      classOf[ReviewCommentsCreator],
+      classOf[ReviewCommentsHandler],
       classOf[IssuesOnChangedLinesFilter],
       classOf[GitBaseDirResolver]
     )

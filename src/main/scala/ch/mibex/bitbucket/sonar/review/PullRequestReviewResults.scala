@@ -6,14 +6,14 @@ import ch.mibex.bitbucket.sonar.utils.{SonarUtils, StringUtils}
 import org.sonar.api.batch.postjob.issue.PostJobIssue
 import org.sonar.api.batch.rule.Severity
 
-import scala.collection.mutable
+import scala.collection.immutable.HashMap
 
 
 class PullRequestReviewResults(pluginConfiguration: SonarBBPluginConfig) {
-  private val newIssuesBySeverity = new mutable.HashMap[Severity, Int]().withDefaultValue(0)
+  private var newIssuesBySeverity: Map[Severity, Int] = HashMap().withDefaultValue(0)
 
   def issueFound(issue: PostJobIssue): Unit = {
-    newIssuesBySeverity(issue.severity()) += 1
+    newIssuesBySeverity += (issue.severity() -> (newIssuesBySeverity(issue.severity()) + 1))
   }
 
   def calculateBuildStatus(): BuildStatus =

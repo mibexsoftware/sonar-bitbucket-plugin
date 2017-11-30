@@ -16,22 +16,24 @@ import scala.collection.JavaConverters._
 
 
 // due to https://jira.sonarsource.com/browse/SONAR-6398, a post job is not called on SonarQube 5.1.0!
-class SonarReviewPostJob(bitbucketClient: BitbucketClient,
-                         pluginConfig: SonarBBPluginConfig,
-                         reviewCommentsUpdater: ReviewCommentsCreator) extends PostJob with CheckProject {
+class SonarReviewPostJob(
+  bitbucketClient: BitbucketClient,
+  pluginConfig: SonarBBPluginConfig,
+  reviewCommentsHandler: ReviewCommentsHandler
+) extends PostJob with CheckProject {
   private val logger = Loggers.get(getClass)
 
   override def execute(context: PostJobContext): Unit = {
     getPullRequestsToAnalyze foreach { pullRequest =>
-      logger.info(LogUtils.f(s"Plug-in is active and will analyze pull request with #${pullRequest.id}..."))
+      logger.info(LogUtils.f(s"Plug-in is active and will analyze pull request #${pullRequest.id}..."))
       handlePullRequest(context, pullRequest)
     }
   }
 
   private def getProjectUrl(context: PostJobContext, pullRequest: PullRequest) =
-    getSonarBaseUrl(context.settings()) + "/dashboard?id=" +
-      context.settings().getString(CoreProperties.PROJECT_KEY_PROPERTY) + ":" +
-      URLEncoder.encode(pullRequest.srcBranch, "UTF-8")
+    (getSonarBaseUrl(context.settings()) + "/dashboard?id="
+      + context.settings().getString(CoreProperties.PROJECT_KEY_PROPERTY) + ":"
+      + URLEncoder.encode(pullRequest.srcBranch, "UTF-8"))
 
   private def getSonarBaseUrl(settings: Settings) =
     Option(settings.getString(CoreProperties.SERVER_BASE_URL)).getOrElse(settings.getString("sonar.host.url"))
@@ -40,9 +42,7 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
     setBuildStatus(InProgressBuildStatus, context, pullRequest)
     val ourComments = bitbucketClient.findOwnPullRequestComments(pullRequest)
     val report = new PullRequestReviewResults(pluginConfig)
-    val allIssues = context.issues().asScala
-    val commentsToDelete = reviewCommentsUpdater.createOrUpdateComments(pullRequest, allIssues, ourComments, report)
-    deletePreviousComments(pullRequest, commentsToDelete)
+    reviewCommentsHandler.updateComments(pullRequest, context.issues().asScala, ourComments, report)
     deletePreviousGlobalComments(pullRequest, ourComments)
     createGlobalComment(pullRequest, report)
     approveOrUnapproveIfEnabled(pullRequest, report)
@@ -56,18 +56,17 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
   }
 
   private def getPullRequestsToAnalyze =
-    if (pluginConfig.pullRequestId() != 0) findPullRequestWithConfiguredId(pluginConfig.pullRequestId()).toList
+    if (pluginConfig.pullRequestId() != 0)
+      findPullRequestWithConfiguredId(pluginConfig.pullRequestId()).toList
     else findPullRequestsForConfiguredBranch
 
-  private def findPullRequestWithConfiguredId(pullRequestId: Int): Option[PullRequest] = {
+  private def findPullRequestWithConfiguredId(pullRequestId: Int) = {
     val pullRequest = bitbucketClient.findPullRequestWithId(pullRequestId)
-
     if (pullRequest.isEmpty) {
       logger.info(LogUtils.f(
-        s"""Pull request with id '$pullRequestId' not found.
+        s"""Pull request '$pullRequestId' not found.
             |No analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
     }
-
     pullRequest
   }
 
@@ -75,25 +74,24 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
     val branchName = pluginConfig.branchName()
     val pullRequests = bitbucketClient.findPullRequestsWithSourceBranch(branchName)
     if (pullRequests.isEmpty) {
-      logger.info(LogUtils.f(
-        s"""No open pull requests with source branch '$branchName' found.
-            |No analysis will be performed.""".stripMargin.replaceAll("\n", " ")))
+      logger.info(
+        LogUtils.f(
+          s"""No open pull requests with source branch '$branchName' found.
+              |No analysis will be performed.""".stripMargin.replaceAll("\n", " "))
+      )
     }
     pullRequests
   }
 
   private def approveOrUnapproveIfEnabled(pullRequest: PullRequest, report: PullRequestReviewResults) {
     if (pluginConfig.approveUnApproveEnabled()) {
-      if (report.canBeApproved) {
-        bitbucketClient.approve(pullRequest)
-      } else {
-        bitbucketClient.unApprove(pullRequest)
-      }
+      if (report.canBeApproved) bitbucketClient.approve(pullRequest)
+      else bitbucketClient.unApprove(pullRequest)
     }
   }
 
   private def createGlobalComment(pullRequest: PullRequest, report: PullRequestReviewResults) {
-    bitbucketClient.createPullRequestComment(pullRequest = pullRequest, message = report.formatAsMarkdown())
+    bitbucketClient.createPullRequestComment(pullRequest, report.formatAsMarkdown())
   }
 
   private def deletePreviousGlobalComments(pullRequest: PullRequest, ownComments: Seq[PullRequestComment]) {
@@ -105,19 +103,11 @@ class SonarReviewPostJob(bitbucketClient: BitbucketClient,
       }
   }
 
-  private def deletePreviousComments(pullRequest: PullRequest, commentsToDelete: Map[Int, PullRequestComment]) {
-    commentsToDelete foreach { case (commentId, comment) =>
-      if (comment.content.startsWith(SonarUtils.sonarMarkdownPrefix())) {
-        bitbucketClient.deletePullRequestComment(pullRequest, commentId)
-      }
-    }
-  }
-
   override def shouldExecuteOnProject(project: Project): Boolean = {
     if (logger.isDebugEnabled) {
       logger.debug(LogUtils.f("\nPlug-in config: {}\n"), pluginConfig)
     }
-    pluginConfig.validate()
+    pluginConfig.validateOrThrow()
     true
   }
 

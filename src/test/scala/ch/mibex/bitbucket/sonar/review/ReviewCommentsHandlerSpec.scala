@@ -19,7 +19,7 @@ import org.specs2.runner.JUnitRunner
 import org.specs2.specification.Scope
 
 @RunWith(classOf[JUnitRunner])
-class ReviewCommentsUpdaterSpec extends Specification with Mockito {
+class ReviewCommentsHandlerSpec extends Specification with Mockito {
 
   "createOrUpdateComments" should {
 
@@ -38,7 +38,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
             |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either remove or fill this block of code. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS00108)""".stripMargin,
         line = Some(23),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")))
-      reviewCommentsCreator.createOrUpdateComments(pullRequest, issues, existingReviewComments, pullRequestResults)
+      reviewCommentsCreator.updateComments(pullRequest, issues, existingReviewComments, pullRequestResults)
 
       there was no(bitbucketClient).createPullRequestComment(
         pullRequest,
@@ -67,7 +67,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
             |![MAJOR](https://raw.githubusercontent.com/mibexsoftware/sonar-bitbucket-plugin/master/src/main/resources/images/severity/MAJOR.png) **MAJOR**: Either log or rethrow this exception. [[Details]](http://localhost:9000/coding_rules#rule_key=squid%3AS1166)""".stripMargin,
         line = Some(23),
         filePath = Some("multimod/src/db/src/main/java/ch/mycompany/test/db/App.java")))
-      reviewCommentsCreator.createOrUpdateComments(pullRequest, issues, existingReviewComments, pullRequestResults)
+      reviewCommentsCreator.updateComments(pullRequest, issues, existingReviewComments, pullRequestResults)
 
       there was one(bitbucketClient).updateReviewComment(
         pullRequest,
@@ -86,7 +86,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
     "create comments for all issues found when there are no existing comments" in new ReviewContext {
       val pullRequest = PullRequest(id = 1, srcBranch = "develop", srcCommitHref = None, srcCommitHash =  Some("0affee"), dstCommitHash =  Some("0affee"))
       issuesOnChangedLinesFilter.filter(any[PullRequest], any[Seq[PostJobIssue]]) returns issues
-      reviewCommentsCreator.createOrUpdateComments(pullRequest, issues, existingReviewComments = List(), pullRequestResults)
+      reviewCommentsCreator.updateComments(pullRequest, issues, existingReviewComments = List(), pullRequestResults)
 
       there was one(bitbucketClient).createPullRequestComment(
         pullRequest,
@@ -181,7 +181,7 @@ class ReviewCommentsUpdaterSpec extends Specification with Mockito {
     sonarSettings.getString(CoreProperties.SERVER_BASE_URL) returns "http://localhost:9000"
     val issuesOnChangedLinesFilter = mock[IssuesOnChangedLinesFilter]
     val gitBaseDirResolver = mock[GitBaseDirResolver]
-    val reviewCommentsCreator = new ReviewCommentsCreator(
+    val reviewCommentsCreator = new ReviewCommentsHandler(
       bitbucketClient, pluginConfig, sonarSettings, gitBaseDirResolver, issuesOnChangedLinesFilter
     )
     val pullRequestResults = new PullRequestReviewResults(pluginConfig)

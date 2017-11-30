@@ -7,7 +7,6 @@ import org.sonar.api.rule.Severity
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
-
 import org.specs2.specification.Scope
 
 
@@ -102,7 +101,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
     "not allow unsupported SonarQube version 5.1" in new SettingsContext {
       server.getVersion returns "5.1"
       val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
-      pluginConfig.validate() must throwA(
+      pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
           "requirement failed: [sonar4bitbucket] SonarQube v5.1 is not supported because of issue SONAR-6398"
         )
@@ -115,7 +114,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
       settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
       settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
-      pluginConfig.validate()
+      pluginConfig.validateOrThrow()
     }
 
     "validate for user OAuth based authentication" in new SettingsContext {
@@ -124,7 +123,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
-      pluginConfig.validate()
+      pluginConfig.validateOrThrow()
     }
 
     "not accept wrong severity level" in new SettingsContext {
@@ -134,7 +133,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
       settings.setProperty(SonarBBPlugin.SonarQubeMinSeverity, "UNKNOWN")
-      pluginConfig.validate() must throwA(
+      pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException("[sonar4bitbucket] Invalid severity UNKNOWN")
       )
     }
@@ -143,7 +142,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketAccountName, "mibexsoftware")
       settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
       settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
-      pluginConfig.validate() must throwA(
+      pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
           """requirement failed: [sonar4bitbucket] Either the name and API key for the Bitbucket team account
             |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
@@ -158,7 +157,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
       settings.setProperty(SonarBBPlugin.SonarQubeIllegalBranchCharReplacement, "/")
-      pluginConfig.validate() must throwA(
+      pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
           """requirement failed: [sonar4bitbucket] Only the following characters
             |are allowed as replacement: [0-9a-zA-Z:\-_.]*""".stripMargin.replaceAll("\n", " ")
@@ -171,7 +170,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketRepoSlug, "superrepo")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientKey, "asfasgshhas")
       settings.setProperty(SonarBBPlugin.BitbucketOAuthClientSecret, "xxxxxxx")
-      pluginConfig.validate() must throwA(
+      pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
           "requirement failed: [sonar4bitbucket] The branch to analyze or the pull request ID must be given"
         )

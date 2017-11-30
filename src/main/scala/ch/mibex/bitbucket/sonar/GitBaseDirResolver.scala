@@ -36,10 +36,8 @@ class GitBaseDirResolver {
   @tailrec
   private def findRepositoryBaseDir(optBaseDir: Option[File], gitDirName: String): Option[File] = optBaseDir match {
     case Some(baseDir) =>
-      if (new File(baseDir, gitDirName).exists()) {
-        return optBaseDir
-      }
-      findRepositoryBaseDir(Option(baseDir.getParentFile), gitDirName)
+      if (new File(baseDir, gitDirName).exists()) optBaseDir
+      else findRepositoryBaseDir(Option(baseDir.getParentFile), gitDirName)
     case None => None
   }
 
