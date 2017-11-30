@@ -30,10 +30,11 @@ sealed trait BuildStatus {
   def name: String
   def description: String
 }
-case class FailingBuildStatus(numBlocker: Int, numCritical: Int) extends BuildStatus {
+case class FailingBuildStatus(failedMessage: String) extends BuildStatus {
   val name = "FAILED"
-  val description = s"Sonar analysis failed. $numBlocker blocker and $numCritical critical issues found."
+  val description = failedMessage
 }
+
 case object InProgressBuildStatus extends BuildStatus {
   val name = "INPROGRESS"
   val description = "Sonar analysis in progress..."
