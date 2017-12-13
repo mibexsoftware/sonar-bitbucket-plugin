@@ -145,7 +145,7 @@ class BitbucketClient(config: SonarBBPluginConfig) {
 
     def isFromUs(comment: Map[String, Any]): Boolean =
       Option(comment("user").asInstanceOf[Map[String, Any]])
-        .getOrElse(Map("uuid" -> null))("uuid").asInstanceOf[String] equals uuid
+        .getOrElse(Map("uuid" -> ""))("uuid").asInstanceOf[String] equals uuid
 
     def fetchPullRequestCommentsPage(start: Int): (Option[Int], Seq[PullRequestComment]) = {
       fetchPage(s"/pullrequests/${pullRequest.id}/comments", f =
