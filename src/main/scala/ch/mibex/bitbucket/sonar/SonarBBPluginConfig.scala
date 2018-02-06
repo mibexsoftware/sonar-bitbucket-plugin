@@ -32,6 +32,8 @@ class SonarBBPluginConfig(settings: Settings, server: Server) {
 
   def sonarApprovalSeverityLevel(): String = settings.getString(SonarBBPlugin.SonarUnapprovalSeverityLevel)
 
+  def gitBaseDir(): String = settings.getString(SonarBBPlugin.BitbucketGitBaseDir)
+
   def branchName(): String = {
     var branchName = settings.getString(SonarBBPlugin.BitbucketBranchName)
     Option(branchName) foreach { _ =>

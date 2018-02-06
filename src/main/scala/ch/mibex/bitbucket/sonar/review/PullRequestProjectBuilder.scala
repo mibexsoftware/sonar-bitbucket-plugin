@@ -1,5 +1,7 @@
 package ch.mibex.bitbucket.sonar.review
 
+import java.io.File
+
 import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPlugin, SonarBBPluginConfig}
 import org.sonar.api.CoreProperties
 import org.sonar.api.batch.bootstrap.ProjectBuilder
@@ -19,7 +21,7 @@ class PullRequestProjectBuilder(pluginConfiguration: SonarBBPluginConfig,
   }
 
   private def initGitBaseDir(context: Context) {
-    gitBaseDirResolver.init(context.projectReactor().getRoot.getBaseDir)
+    gitBaseDirResolver.init(Option(pluginConfiguration.gitBaseDir()).map(c=> new File(c)).getOrElse(context.projectReactor().getRoot.getBaseDir))
   }
 
   private def checkAnalysisMode() {
