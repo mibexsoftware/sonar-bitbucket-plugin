@@ -1,8 +1,8 @@
 package ch.mibex.bitbucket.sonar.client
 
 import java.net.{HttpURLConnection, InetSocketAddress, Proxy, URL}
-import javax.ws.rs.core.MediaType
 
+import javax.ws.rs.core.MediaType
 import ch.mibex.bitbucket.sonar.utils.{JsonUtils, LogUtils}
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
@@ -10,7 +10,7 @@ import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
 import com.sun.jersey.client.urlconnection.{HttpURLConnectionFactory, URLConnectionClientHandler}
 import org.sonar.api.batch.rule.Severity
-import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
+import org.sonar.api.batch.{InstantiationStrategy, ScannerSide}
 import org.sonar.api.utils.log.Loggers
 
 import scala.collection.mutable
@@ -45,7 +45,7 @@ case object SuccessfulBuildstatus extends BuildStatus {
   val description = s"Sonar analysis successful :-)"
 }
 
-@BatchSide
+@ScannerSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class BitbucketClient(config: SonarBBPluginConfig) {
   private final val PageStartIndex = 1

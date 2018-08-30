@@ -2,11 +2,11 @@ package ch.mibex.bitbucket.sonar
 
 import ch.mibex.bitbucket.sonar.utils.SonarUtils
 import org.sonar.api.batch.rule.Severity
-import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
+import org.sonar.api.batch.{InstantiationStrategy, ScannerSide}
 import org.sonar.api.config.Settings
 import org.sonar.api.platform.Server
 
-@BatchSide
+@ScannerSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class SonarBBPluginConfig(settings: Settings, server: Server) {
 

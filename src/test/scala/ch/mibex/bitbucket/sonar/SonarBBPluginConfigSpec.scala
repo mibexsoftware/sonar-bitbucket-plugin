@@ -1,6 +1,7 @@
 package ch.mibex.bitbucket.sonar
 
 import org.junit.runner.RunWith
+import org.sonar.api.config.internal.MapSettings
 import org.sonar.api.config.{PropertyDefinitions, Settings}
 import org.sonar.api.platform.Server
 import org.sonar.api.rule.Severity
@@ -14,7 +15,7 @@ import org.specs2.specification.Scope
 class SonarBBPluginConfigSpec extends Specification with Mockito {
 
   class SettingsContext extends Scope {
-    val settings = new Settings(new PropertyDefinitions(classOf[SonarBBPlugin]))
+    val settings = new MapSettings(new PropertyDefinitions(classOf[SonarBBPlugin]))
     val server = mock[Server]
     val pluginConfig = new SonarBBPluginConfig(settings, server)
   }
