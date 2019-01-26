@@ -6,14 +6,14 @@ import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
 import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPluginConfig}
 import org.sonar.api.batch.postjob.issue.PostJobIssue
 import org.sonar.api.batch.rule.Severity
-import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
+import org.sonar.api.batch.{InstantiationStrategy, ScannerSide}
 import org.sonar.api.config.Settings
 import org.sonar.api.utils.log.Loggers
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
 
-@BatchSide
+@ScannerSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class ReviewCommentsHandler(
   bitbucketClient: BitbucketClient,

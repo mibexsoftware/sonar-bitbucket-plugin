@@ -25,13 +25,12 @@ unapproved):
 ## Usage
 
 ### Prerequisites
-- SonarQube >= 4.5.x (note that the plug-in does not work with SonarQube 5.1.0, as this contains a bug which prevents
-the plug-in from working correctly; see https://jira.sonarsource.com/browse/SONAR-6398; please use 5.1.2 instead)
+- SonarQube >= 6.5
 - A Bitbucket account
-- Maven 3.x + JDK 1.7 (to manually build it)
+- Maven 3.x + JDK 1.8 (to manually build it)
 
 ### Important facts
-- This plug-in only supports Git repositories.
+- This plug-in only supports Git (no Mercurial) repositories.
 - It can only be run in SonarQube's "preview/issues" mode. You cannot use it with "publish" (persistent) mode! 
 
 ### Installation

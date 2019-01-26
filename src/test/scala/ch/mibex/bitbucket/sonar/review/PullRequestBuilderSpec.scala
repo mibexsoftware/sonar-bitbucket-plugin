@@ -43,11 +43,6 @@ class PullRequestBuilderSpec extends Specification with Mockito {
       projectBuilder.build(projectContext)
     }
 
-    "allow analysis when incremental mode is used" in new ProjectBuilderContext {
-      settings.getString(CoreProperties.ANALYSIS_MODE) returns CoreProperties.ANALYSIS_MODE_INCREMENTAL
-      projectBuilder.build(projectContext)
-    }
-
     "allow analysis when SonarQube 5.2's issues mode is used" in new ProjectBuilderContext {
       settings.getString(CoreProperties.ANALYSIS_MODE) returns "issues"
       projectBuilder.build(projectContext)

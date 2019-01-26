@@ -2,14 +2,12 @@ package ch.mibex.bitbucket.sonar.review
 
 import java.net.URLEncoder
 
-import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.client._
 import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import org.sonar.api.CoreProperties
-import org.sonar.api.batch.CheckProject
 import org.sonar.api.batch.postjob.{PostJob, PostJobContext, PostJobDescriptor}
 import org.sonar.api.config.Settings
-import org.sonar.api.resources.Project
 import org.sonar.api.utils.log.Loggers
 
 import scala.collection.JavaConverters._
@@ -20,7 +18,7 @@ class SonarReviewPostJob(
   bitbucketClient: BitbucketClient,
   pluginConfig: SonarBBPluginConfig,
   reviewCommentsHandler: ReviewCommentsHandler
-) extends PostJob with CheckProject {
+) extends PostJob {
   private val logger = Loggers.get(getClass)
 
   override def execute(context: PostJobContext): Unit = {
@@ -101,14 +99,6 @@ class SonarReviewPostJob(
       .foreach { c =>
         bitbucketClient.deletePullRequestComment(pullRequest, c.commentId)
       }
-  }
-
-  override def shouldExecuteOnProject(project: Project): Boolean = {
-    if (logger.isDebugEnabled) {
-      logger.debug(LogUtils.f("\nPlug-in config: {}\n"), pluginConfig)
-    }
-    pluginConfig.validateOrThrow()
-    true
   }
 
   override def describe(descriptor: PostJobDescriptor): Unit = {
