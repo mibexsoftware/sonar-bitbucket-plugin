@@ -2,18 +2,16 @@ package ch.mibex.bitbucket.sonar.client
 
 import java.net.{HttpURLConnection, InetSocketAddress, Proxy, URL}
 
-import javax.ws.rs.core.MediaType
 import ch.mibex.bitbucket.sonar.utils.{JsonUtils, LogUtils}
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
 import com.sun.jersey.client.urlconnection.{HttpURLConnectionFactory, URLConnectionClientHandler}
+import javax.ws.rs.core.MediaType
 import org.sonar.api.batch.rule.Severity
 import org.sonar.api.batch.{InstantiationStrategy, ScannerSide}
 import org.sonar.api.utils.log.Loggers
-
-import scala.collection.mutable
 
 
 case class PullRequest(id: Int,
@@ -269,10 +267,10 @@ class BitbucketClient(config: SonarBBPluginConfig) {
                                message: String,
                                line: Option[Int] = None,
                                filePath: Option[String] = None): Unit = {
-    val entity = new mutable.HashMap[String, Any]()
+    var entity = Map[String, Any]()
     entity += "content" -> Map("raw" -> message)
     filePath foreach { f =>
-      val inlineParam = new mutable.HashMap[String, Any]()
+      var inlineParam = Map[String, Any]()
       inlineParam += "path" -> f
       line match {
         case Some(l) if l > 0 =>
@@ -283,8 +281,10 @@ class BitbucketClient(config: SonarBBPluginConfig) {
           inlineParam += "to" -> l
         case _ => logger.warn(LogUtils.f(s"Invalid or missing line number for issue: $message"))
       }
-      entity += "inline" -> inlineParam.toMap
+      entity += "inline" -> inlineParam
     }
+
+
     v2Api
       .path(s"/pullrequests/${pullRequest.id}/comments")
       .`type`(MediaType.APPLICATION_JSON)
