@@ -273,17 +273,11 @@ class BitbucketClient(config: SonarBBPluginConfig) {
       var inlineParam = Map[String, Any]()
       inlineParam += "path" -> f
       line match {
-        case Some(l) if l > 0 =>
-          // see https://bitbucket.org/site/master/issues/11925/post-a-new-comment-on-a-changeset-in-a:
-          // "commenting on a "green line" requires "line_to", a red line "line_from" and a white line should take
-          // either"; but for context (white) lines only line_from works for me
-          //TODO once the Bitbucket issue 11925 is resolved, this should also fix #17 on Github
-          inlineParam += "to" -> l
+        case Some(l) if l > 0 => inlineParam += "to" -> l
         case _ => logger.warn(LogUtils.f(s"Invalid or missing line number for issue: $message"))
       }
       entity += "inline" -> inlineParam
     }
-
 
     v2Api
       .path(s"/pullrequests/${pullRequest.id}/comments")

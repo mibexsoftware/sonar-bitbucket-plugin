@@ -64,7 +64,7 @@ class SonarBBPluginConfig(settings: Settings, server: Server) {
     )
     require(
       isValidAuthenticationGiven,
-      s"""${SonarBBPlugin.PluginLogPrefix} Either the name and API key for the Bitbucket team account
+      s"""${SonarBBPlugin.PluginLogPrefix} Either the user name and APP pasword for your Bitbucket account
         |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
     )
     Option(minSeverity()) foreach { severity =>

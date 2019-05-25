@@ -45,7 +45,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       pluginConfig.teamName() must_== "a_team"
     }
 
-    "yield configured api key" in new SettingsContext {
+    "yield configured APP password" in new SettingsContext {
       settings.setProperty(SonarBBPlugin.BitbucketApiKey, "1234567890")
       pluginConfig.apiKey() must_== "1234567890"
     }
@@ -145,7 +145,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
       pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
-          """requirement failed: [sonar4bitbucket] Either the name and API key for the Bitbucket team account
+          """requirement failed: [sonar4bitbucket] Either the user name and APP pasword for your Bitbucket account
             |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
         )
       )

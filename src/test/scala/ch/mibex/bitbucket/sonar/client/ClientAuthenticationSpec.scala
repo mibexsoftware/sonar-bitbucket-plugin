@@ -29,7 +29,7 @@ class ClientAuthenticationSpec extends Specification with Mockito {
 
   "bind authentication to Jersey client" should {
 
-    "use a basic auth filter for team API key" in new AuthContext {
+    "use a basic auth filter for APP password" in new AuthContext {
       settings.setProperty(SonarBBPlugin.BitbucketApiKey, "xxxxxxxxx")
       settings.setProperty(SonarBBPlugin.BitbucketTeamName, "a_team")
       authentication.configure(client)
