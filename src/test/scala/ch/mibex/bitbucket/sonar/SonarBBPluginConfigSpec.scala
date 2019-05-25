@@ -99,12 +99,12 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
 
   "plug-in configuration validation" should {
 
-    "not allow unsupported SonarQube version 5.1" in new SettingsContext {
-      server.getVersion returns "5.1"
+    "not allow unsupported SonarQube version 7.7" in new SettingsContext {
+      server.getVersion returns "7.7"
       val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
       pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
-          "requirement failed: [sonar4bitbucket] SonarQube v5.1 is not supported because of issue SONAR-6398"
+          "requirement failed: [sonar4bitbucket] SonarQube v7.7 is not supported because of required preview mode"
         )
       )
     }

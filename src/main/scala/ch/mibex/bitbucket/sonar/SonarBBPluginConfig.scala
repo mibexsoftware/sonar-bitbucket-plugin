@@ -50,8 +50,8 @@ class SonarBBPluginConfig(settings: Settings, server: Server) {
 
   def validateOrThrow(): Unit = {
     require(
-      Option(server.getVersion).isEmpty || server.getVersion != "5.1",
-      s"${SonarBBPlugin.PluginLogPrefix} SonarQube v5.1 is not supported because of issue SONAR-6398"
+      Option(server.getVersion).isEmpty || !server.getVersion.startsWith("7.7"),
+      s"${SonarBBPlugin.PluginLogPrefix} SonarQube v7.7 is not supported because of required preview mode"
     )
     require(
       SonarUtils.isValidBranchNameReplacement(branchIllegalCharReplacement()),

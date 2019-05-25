@@ -2,7 +2,7 @@
 
 [![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin)
 
-## PLEASE NOTE: The plug-in only supports SonarQube versions < 7.7
+## PLEASE NOTE: The plug-in only supports SonarQube versions < 7.7 due do the required preview mode
 
 ### Download it from [Github releases page](https://github.com/mibexsoftware/sonar-bitbucket-plugin/releases/latest)
 
@@ -26,10 +26,9 @@ unapproved):
 ## Usage
 
 ### Prerequisites
-- SonarQube >= 4.5.x (note that the plug-in does not work with SonarQube 5.1.0, as this contains a bug which prevents
-the plug-in from working correctly; see https://jira.sonarsource.com/browse/SONAR-6398; please use 5.1.2 instead)
+- SonarQube >= 6.7.x and SonarQube < 7.7.x
 - A Bitbucket account
-- Maven 3.x + JDK 1.7 (to manually build it)
+- Maven 3.x + JDK (to manually build it)
 
 ### Important facts
 - This plug-in only supports Git repositories.
