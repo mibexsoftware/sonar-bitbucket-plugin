@@ -2,6 +2,7 @@
 
 [![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin)
 
+## PLEASE NOTE: The plug-in only supports SonarQube versions < 7.7
 
 ### Download it from [Github releases page](https://github.com/mibexsoftware/sonar-bitbucket-plugin/releases/latest)
 

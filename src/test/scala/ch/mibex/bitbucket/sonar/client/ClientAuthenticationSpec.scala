@@ -1,14 +1,14 @@
 package ch.mibex.bitbucket.sonar.client
 
-import javax.ws.rs.core.{MediaType, MultivaluedMap}
-
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, WebResource}
 import com.sun.jersey.core.util.MultivaluedMapImpl
+import javax.ws.rs.core.{MediaType, MultivaluedMap}
 import org.junit.runner.RunWith
 import org.mockito
-import org.sonar.api.config.{PropertyDefinitions, Settings}
+import org.sonar.api.config.PropertyDefinitions
+import org.sonar.api.config.internal.MapSettings
 import org.sonar.api.platform.Server
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -20,7 +20,7 @@ import org.specs2.specification.Scope
 class ClientAuthenticationSpec extends Specification with Mockito {
 
   class AuthContext extends Scope {
-    val settings = new Settings(new PropertyDefinitions(classOf[SonarBBPlugin]))
+    val settings = new MapSettings(new PropertyDefinitions(classOf[SonarBBPlugin]))
     val server = mock[Server]
     val pluginConfig = new SonarBBPluginConfig(settings, server)
     val authentication = new ClientAuthentication(pluginConfig)
