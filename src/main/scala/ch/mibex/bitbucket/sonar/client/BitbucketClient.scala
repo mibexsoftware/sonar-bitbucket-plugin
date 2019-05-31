@@ -134,7 +134,7 @@ class BitbucketClient(config: SonarBBPluginConfig) {
     forEachResultPage(Seq[PullRequest](), (pageStart, pullRequests: Seq[PullRequest]) => {
       val (nextPageStart, newPullRequests) = fetchPullRequestsPage(pageStart)
       (nextPageStart, pullRequests ++ newPullRequests)
-    }).filter(_.srcBranch == branchName)
+    }).filter(_.srcBranch.toLowerCase == branchName.toLowerCase)
 
   }
 
