@@ -9,7 +9,7 @@ import com.sun.jersey.api.client.{Client, ClientRequest, ClientResponse}
 import com.sun.jersey.core.util.MultivaluedMapImpl
 
 
-// either use the API key from the team like this:
+// either use the app password from the user like this:
 // curl -u teamname:pw -v -X POST --data "content=greetings from sonar" https://bitbucket.org/api/1.0/repositories/accountName/repoSlug/pullrequests/1/comments
 //
 // or otherwise OAuth:

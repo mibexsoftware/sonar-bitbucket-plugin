@@ -1,7 +1,6 @@
 package ch.mibex.bitbucket.sonar.client
 
 import java.net.{HttpURLConnection, InetSocketAddress, Proxy, URL}
-import javax.ws.rs.core.MediaType
 
 import ch.mibex.bitbucket.sonar.utils.{JsonUtils, LogUtils}
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
@@ -9,11 +8,10 @@ import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
 import com.sun.jersey.client.urlconnection.{HttpURLConnectionFactory, URLConnectionClientHandler}
+import javax.ws.rs.core.MediaType
 import org.sonar.api.batch.rule.Severity
-import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
+import org.sonar.api.batch.{InstantiationStrategy, ScannerSide}
 import org.sonar.api.utils.log.Loggers
-
-import scala.collection.mutable
 
 
 case class PullRequest(id: Int,
@@ -45,13 +43,12 @@ case object SuccessfulBuildstatus extends BuildStatus {
   val description = s"Sonar analysis successful :-)"
 }
 
-@BatchSide
+@ScannerSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class BitbucketClient(config: SonarBBPluginConfig) {
   private final val PageStartIndex = 1
   private val logger = Loggers.get(getClass)
   private val client = createJerseyClient()
-  private val v1Api = createResource("1.0")
   private val v2Api = createResource("2.0")
   private lazy val uuid = getLoggedInUserUUID
 
@@ -202,7 +199,7 @@ class BitbucketClient(config: SonarBBPluginConfig) {
 
   def deletePullRequestComment(pullRequest: PullRequest, commentId: Int): Boolean = {
     val response =
-      v1Api
+      v2Api
         .path(s"/pullrequests/${pullRequest.id}/comments/$commentId")
         .delete(classOf[ClientResponse])
     response.getStatus == 200
@@ -258,11 +255,11 @@ class BitbucketClient(config: SonarBBPluginConfig) {
   }
 
   def updateReviewComment(pullRequest: PullRequest, commentId: Int, message: String): Unit = {
-    v1Api
+    v2Api
       .path(s"/pullrequests/${pullRequest.id}/comments/$commentId")
       .`type`(MediaType.APPLICATION_JSON)
       .accept(MediaType.APPLICATION_JSON)
-      .entity(JsonUtils.map2Json(Map("content" -> message)))
+      .entity(JsonUtils.map2Json(Map("content" -> Map("raw" -> message))))
       .put()
   }
 
@@ -270,25 +267,19 @@ class BitbucketClient(config: SonarBBPluginConfig) {
                                message: String,
                                line: Option[Int] = None,
                                filePath: Option[String] = None): Unit = {
-    val entity = new mutable.HashMap[String, Any]()
-    entity += "content" -> message
+    var entity = Map[String, Any]()
+    entity += "content" -> Map("raw" -> message)
     filePath foreach { f =>
-      entity += "filename" -> f
+      var inlineParam = Map[String, Any]()
+      inlineParam += "path" -> f
       line match {
-        case Some(l) if l > 0 =>
-          // see https://bitbucket.org/site/master/issues/11925/post-a-new-comment-on-a-changeset-in-a:
-          // "commenting on a "green line" requires "line_to", a red line "line_from" and a white line should take
-          // either"; but for context (white) lines only line_from works for me
-          //TODO once the Bitbucket issue 11925 is resolved, this should also fix #17 on Github
-          entity += "line_to" -> l
-        case Some(l) if l == 0 =>
-          // this is necessary for file-level pull request comments
-          entity += "anchor" -> pullRequest.srcCommitHash.getOrElse("")
-          entity += "dest_rev" -> pullRequest.dstCommitHash.getOrElse("")
+        case Some(l) if l > 0 => inlineParam += "to" -> l
         case _ => logger.warn(LogUtils.f(s"Invalid or missing line number for issue: $message"))
       }
+      entity += "inline" -> inlineParam
     }
-    v1Api
+
+    v2Api
       .path(s"/pullrequests/${pullRequest.id}/comments")
       .`type`(MediaType.APPLICATION_JSON)
       .accept(MediaType.APPLICATION_JSON)

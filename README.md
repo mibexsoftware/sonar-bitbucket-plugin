@@ -2,6 +2,7 @@
 
 [![Travis build status](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin.svg?branch=master)](https://travis-ci.org/mibexsoftware/sonar-bitbucket-plugin)
 
+## PLEASE NOTE: The plug-in only supports SonarQube versions < 7.7 due do the required preview mode
 
 ### Download it from [Github releases page](https://github.com/mibexsoftware/sonar-bitbucket-plugin/releases/latest)
 
@@ -25,10 +26,9 @@ unapproved):
 ## Usage
 
 ### Prerequisites
-- SonarQube >= 4.5.x (note that the plug-in does not work with SonarQube 5.1.0, as this contains a bug which prevents
-the plug-in from working correctly; see https://jira.sonarsource.com/browse/SONAR-6398; please use 5.1.2 instead)
+- SonarQube >= 6.7.x and SonarQube < 7.7.x
 - A Bitbucket account
-- Maven 3.x + JDK 1.7 (to manually build it)
+- Maven 3.x + JDK (to manually build it)
 
 ### Important facts
 - This plug-in only supports Git repositories.
@@ -86,8 +86,8 @@ See this table about the possible configuration options:
 |----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|------------------------|
 | sonar.bitbucket.repoSlug                     | The slug of your Bitbucket repository (https://bitbucket.org/[account_name]/[repo_slug]).                                                                                                                                      |                                                | sonar-bitbucket-plugin |
 | sonar.bitbucket.accountName                  | The Bitbucket account your repository belongs to (https://bitbucket.org/[account_name]/[repo_slug]).                                                                                                                           |                                                | mibexsoftware          |
-| sonar.bitbucket.teamName                     | If you want to create pull request comments for Sonar issues under your team account (deprecated) or with an app password, provide the Bitbucket team ID (not the name) or your Bitbucket user name here.                      |                                                | a_team                 |
-| sonar.bitbucket.apiKey                       | If you want to create pull request comments for Sonar issues under your team account (deprecated) or with an app password, provide the API key or your app password here.                                                      |                                                |                        |
+| sonar.bitbucket.teamName                     | If you want to create pull request comments for Sonar issues with an app password, provide your Bitbucket user name here.                      |                                                | a_team                 |
+| sonar.bitbucket.apiKey                       | If you want to create pull request comments for Sonar issues with an app password, provide your app password here.                                                      |                                                |                        |
 | sonar.bitbucket.oauthClientKey               | If you want to create pull request comments for Sonar issues under your personal account, provide the client key of the new OAuth consumer here (needs repository and pull request WRITE permissions).                         |                                                |                        |
 | sonar.bitbucket.oauthClientSecret            | If you want to create pull request comments for Sonar issues under your personal account, provide the OAuth client secret for the new OAuth consumer here.                                                                     |                                                |                        |
 | sonar.bitbucket.branchName                   | The branch name you want to get analyzed with SonarQube. When building with Jenkins, use $GIT_BRANCH. For Bamboo, you can use ${bamboo.repository.git.branch}.                                                                 |                                                | $GIT_BRANCH            |
@@ -99,10 +99,8 @@ See this table about the possible configuration options:
 | sonar.bitbucket.maxSeverityApprovalLevel     | If any issues of this level or higher are found, it will unapprove the pull request.                                                                                                                                           | CRITICAL                                       | MAJOR                  |
 
 
-For authentication, you have to decide between if you want to create pull requests under your own user by using OAuth 
-or as your team account with an API key. If you have a team account, we suggest to use this one as it is less confusing
-if the Sonar issues are created by this account opposed to when a personal account is taken. Unfortunately, Bitbucket
-does not (yet) support technical users as GitHub does, so we have to use either a user or team account here.
+For authentication, you have to decide between if you want to create pull request comments under by using OAuth 
+or with an app password.
 
 If you go with OAuth, you have to configure a callback URL and use the Bitbucket permissions "Repository write" and 
 "Pull requests write" (for commenting on the pull request) as well as "Account read" for the new OAuth consumer. The permissions should look like follows:

@@ -4,9 +4,9 @@ import ch.mibex.bitbucket.sonar.client.{BitbucketClient, PullRequest}
 import ch.mibex.bitbucket.sonar.diff.GitDiffParser.{BinaryDiff, Diff, GitDiff}
 import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPlugin}
 import org.sonar.api.batch.postjob.issue.PostJobIssue
-import org.sonar.api.batch.{BatchSide, InstantiationStrategy}
+import org.sonar.api.batch.{ScannerSide, InstantiationStrategy}
 
-@BatchSide
+@ScannerSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 class IssuesOnChangedLinesFilter(bitbucketClient: BitbucketClient,
                                  gitBaseDirResolver: GitBaseDirResolver) {

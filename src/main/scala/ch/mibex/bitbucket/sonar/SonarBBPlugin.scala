@@ -44,16 +44,16 @@ object SonarBBPlugin {
     ),
     new Property(
       key = SonarBBPlugin.BitbucketTeamName,
-      name = "Bitbucket team ID",
-      description = "If you want to create pull request comments for Sonar issues under your team account, " +
-        "provide the team ID here.",
+      name = "Bitbucket user name",
+      description = "If you want to create pull request comments for Sonar issues with an APP password, " +
+        "provide your user name here.",
       global = false
     ),
     new Property(
       key = SonarBBPlugin.BitbucketApiKey,
-      name = "Bitbucket API key",
-      description = "If you want to create pull request comments for Sonar issues under your team account, " +
-        "provide the API key for your team account here.",
+      name = "Bitbucket APP password",
+      description = "If you want to create pull request comments for Sonar issues with an APP password, " +
+        "provide the APP password here.",
       `type` = PropertyType.PASSWORD,
       global = false
     ),

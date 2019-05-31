@@ -1,6 +1,7 @@
 package ch.mibex.bitbucket.sonar
 
 import org.junit.runner.RunWith
+import org.sonar.api.config.internal.MapSettings
 import org.sonar.api.config.{PropertyDefinitions, Settings}
 import org.sonar.api.platform.Server
 import org.sonar.api.rule.Severity
@@ -14,7 +15,7 @@ import org.specs2.specification.Scope
 class SonarBBPluginConfigSpec extends Specification with Mockito {
 
   class SettingsContext extends Scope {
-    val settings = new Settings(new PropertyDefinitions(classOf[SonarBBPlugin]))
+    val settings = new MapSettings(new PropertyDefinitions(classOf[SonarBBPlugin]))
     val server = mock[Server]
     val pluginConfig = new SonarBBPluginConfig(settings, server)
   }
@@ -44,7 +45,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       pluginConfig.teamName() must_== "a_team"
     }
 
-    "yield configured api key" in new SettingsContext {
+    "yield configured APP password" in new SettingsContext {
       settings.setProperty(SonarBBPlugin.BitbucketApiKey, "1234567890")
       pluginConfig.apiKey() must_== "1234567890"
     }
@@ -98,12 +99,12 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
 
   "plug-in configuration validation" should {
 
-    "not allow unsupported SonarQube version 5.1" in new SettingsContext {
-      server.getVersion returns "5.1"
+    "not allow unsupported SonarQube version 7.7" in new SettingsContext {
+      server.getVersion returns "7.7"
       val invalidPluginConfig = new SonarBBPluginConfig(settings, server)
       pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
-          "requirement failed: [sonar4bitbucket] SonarQube v5.1 is not supported because of issue SONAR-6398"
+          "requirement failed: [sonar4bitbucket] SonarQube v7.7 is not supported because of required preview mode"
         )
       )
     }
@@ -144,7 +145,7 @@ class SonarBBPluginConfigSpec extends Specification with Mockito {
       settings.setProperty(SonarBBPlugin.BitbucketBranchName, "feature/XYZ")
       pluginConfig.validateOrThrow() must throwA(
         new IllegalArgumentException(
-          """requirement failed: [sonar4bitbucket] Either the name and API key for the Bitbucket team account
+          """requirement failed: [sonar4bitbucket] Either the user name and APP pasword for your Bitbucket account
             |or an OAuth client key and its secret must be given""".stripMargin.replaceAll("\n", " ")
         )
       )

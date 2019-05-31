@@ -47,7 +47,7 @@
     </repositories>
 
     <properties>
-        <sonar.version>5.6</sonar.version>
+        <sonar.version>6.7</sonar.version>
         <sonar.pluginKey>sonarbitbucket</sonar.pluginKey>
         <sonar.pluginName>Bitbucket for Sonar</sonar.pluginName>
         <sonar.pluginClass>ch.mibex.bitbucket.sonar.SonarBBPlugin</sonar.pluginClass>
