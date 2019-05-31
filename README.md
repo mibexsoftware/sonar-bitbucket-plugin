@@ -43,6 +43,14 @@ If you want, you can also build the plug-in manually like follows:
 
 ```
 mvn clean install
+
+# or use Docker
+
+docker run -it --rm -w /opt/maven \
+   -v $PWD:/opt/maven \
+   -v $HOME/.m2:/root/.m2 \
+   maven:3.3-jdk-8 \
+   mvn clean install
 ```
 
 After you copied the plugin's JAR to `{SONARQUBE_INSTALL_DIRECTORY}/extensions/plugins`, you need to restart your
