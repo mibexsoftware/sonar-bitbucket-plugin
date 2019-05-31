@@ -1,5 +1,6 @@
 package ch.mibex.bitbucket.sonar.client
 
+
 import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, WebResource}

@@ -2,9 +2,9 @@ package ch.mibex.bitbucket.sonar.review
 
 import java.net.URLEncoder
 
-import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import ch.mibex.bitbucket.sonar.client._
 import ch.mibex.bitbucket.sonar.utils.{LogUtils, SonarUtils}
+import ch.mibex.bitbucket.sonar.{SonarBBPlugin, SonarBBPluginConfig}
 import org.sonar.api.CoreProperties
 import org.sonar.api.batch.postjob.{PostJob, PostJobContext, PostJobDescriptor}
 import org.sonar.api.config.Settings

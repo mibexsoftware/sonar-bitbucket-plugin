@@ -9,8 +9,8 @@ import com.sun.jersey.api.client.filter.LoggingFilter
 import com.sun.jersey.api.client.{Client, ClientResponse, UniformInterfaceException}
 import com.sun.jersey.client.urlconnection.{HttpURLConnectionFactory, URLConnectionClientHandler}
 import javax.ws.rs.core.MediaType
-import org.sonar.api.batch.rule.Severity
 import org.sonar.api.batch.{InstantiationStrategy, ScannerSide}
+import org.sonar.api.batch.rule.Severity
 import org.sonar.api.utils.log.Loggers
 
 

@@ -27,11 +27,11 @@ unapproved):
 
 ### Prerequisites
 - SonarQube >= 6.7.x and SonarQube < 7.7.x
-- A Bitbucket account
+- A Bitbucket Cloud account
 - Maven 3.x + JDK (to manually build it)
 
 ### Important facts
-- This plug-in only supports Git repositories.
+- This plug-in only supports Git (no Mercurial) repositories.
 - It can only be run in SonarQube's "preview/issues" mode. You cannot use it with "publish" (persistent) mode! 
 
 ### Installation
