@@ -63,7 +63,8 @@ mvn sonar:sonar -X -Dsonar.verbose=true ...
 
 ### Configuration for Jenkins with Maven
 
-You need to run this plug-in as part of your build. Add a build step of type `Execute shell` to your Jenkins job with
+Create a webhook in bitbucket which will run a jenkin job explained below. 
+You need to create a jenkin job which will clone this repo and run this plug-in as part of your build. Add a build step of type `Execute shell` to your Jenkins job with
 the following content:
  
 ```
