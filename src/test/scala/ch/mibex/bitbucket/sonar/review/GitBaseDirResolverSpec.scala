@@ -3,7 +3,7 @@ package ch.mibex.bitbucket.sonar.review
 import java.io.File
 import java.nio.file.Path
 
-import ch.mibex.bitbucket.sonar.GitBaseDirResolver
+import ch.mibex.bitbucket.sonar.{GitBaseDirResolver, SonarBBPluginConfig}
 import org.junit.runner.RunWith
 import org.sonar.api.batch.fs.InputFile
 import org.sonar.api.batch.postjob.issue.PostJobIssue
@@ -19,7 +19,7 @@ class GitBaseDirResolverSpec extends Specification with Mockito {
   "getRepositoryRelativePath" should {
 
     "resolve Git relative path of given file" in {
-      val resolver = new GitBaseDirResolver
+      val resolver = new GitBaseDirResolver(mock[SonarBBPluginConfig])
       val baseDir = getClass.getResource("/gitrepo/multimod/src")
       resolver.init(new File(baseDir.getPath), "git")
 
