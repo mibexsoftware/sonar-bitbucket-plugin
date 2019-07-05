@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#test
 [ -z "$SONAR_HOME" ] && { echo "Please configure SONAR_HOME"; exit 1; }
 
 mvn clean install || exit 1
