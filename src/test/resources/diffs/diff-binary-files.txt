@@ -1,0 +1,5 @@
+diff --git a/solutions/_templates/hybrid-solution/mvn/login/assets/finantix-logo.png b/solutions/_templates/hybrid/mvn/login/assets/finantix-logo.png
+similarity index 100%
+rename from solutions/_templates/hybrid-solution/mvn/login/assets/finantix-logo.png
+rename to solutions/_templates/hybrid/mvn/login/assets/finantix-logo.png
+Binary files a/solutions/_templates/hybrid-solution/mvn/login/assets/finantix-logo.png and b/solutions/_templates/hybrid/mvn/login/assets/finantix-logo.png differ
