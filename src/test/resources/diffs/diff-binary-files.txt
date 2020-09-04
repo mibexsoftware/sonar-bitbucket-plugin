@@ -1,0 +1,17 @@
+diff --git a/solutions/_templates/hybrid-solution/mvn/login/assets/finantix-logo.png b/solutions/_templates/hybrid/mvn/login/assets/finantix-logo.png
+similarity index 100%
+rename from solutions/_templates/hybrid-solution/mvn/login/assets/finantix-logo.png
+rename to solutions/_templates/hybrid/mvn/login/assets/finantix-logo.png
+Binary files a/solutions/_templates/hybrid-solution/mvn/login/assets/finantix-logo.png and b/solutions/_templates/hybrid/mvn/login/assets/finantix-logo.png differ
+diff --git a/main.zip b/main.zip
+deleted file mode 100644
+index 57676e4..0000000
+Binary files a/main.zip and /dev/null differ
+diff --git a/bitbucket/bitbucket-webhook b/bitbucket/bitbucket-webhook
+new file mode 100755
+index 0000000..3c461a4
+Binary files /dev/null and b/bitbucket/bitbucket-webhook differ
+diff --git a/devops/sonarqube/specnet3719.pkl b/devops/sonarqube/specnet3719.pkl
+new file mode 100644
+index 0000000..2aa668f
+Binary files /dev/null and b/devops/sonarqube/specnet3719.pkl differ

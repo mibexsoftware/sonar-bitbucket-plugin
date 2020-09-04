@@ -24,6 +24,8 @@ object GitDiffParser extends RegexParsers {
 
   case class FileChange(oldFile: String, newFile: String)
 
+  case class ExcludePattern(pattern: String)
+
   sealed trait Diff
   case class BinaryDiff() extends Diff
   case class GitDiff(gitDiffHeader: FileChange, header: ExtendedDiffHeader, hunks: List[Hunk]) extends Diff {
@@ -57,9 +59,15 @@ object GitDiffParser extends RegexParsers {
 
   def readUpToNextDiffOrEnd = """(?s).+?(?=((?:diff --git)|$))\n?""".r
 
-  def binaryDiff: Parser[BinaryDiff] = gitDiffHeader ~ extendedDiffHeader ~ "GIT binary patch" ~ readUpToNextDiffOrEnd  ^^ {
+  def binaryDiff: Parser[BinaryDiff] = gitDiffHeader ~ extendedDiffHeader ~ (("GIT binary patch" ~ readUpToNextDiffOrEnd) | binaryFilesDiff | excludedFile)  ^^ {
     _ => BinaryDiff()
   }
+
+  def binaryFilesDiff: Parser[FileChange] = "Binary files " ~> ("""(?:a/)?""".r ~> binaryFilePath <~ " and ") ~ ("""(?:b/)?""".r ~> binaryFilePath <~ " differ") <~ nl ^^ {
+    case oldF ~ newF => FileChange(oldF, newF)
+  }
+
+  def excludedFile: Parser[ExcludePattern] = "File excluded by pattern " ~> """"(.+?)"""".r <~ nl ^^ { p => ExcludePattern(p) }
 
   def gitDiff: Parser[GitDiff] = gitDiffHeader ~ extendedDiffHeader ~ hunks ^^ {
     case fc ~ h ~ hs => GitDiff(fc, h, hs)
@@ -102,6 +110,9 @@ object GitDiffParser extends RegexParsers {
   def fileMode: Parser[Int] = """[0-7]{6}""".r ^^ { _.toInt }
 
   def filePath: Parser[String] = """.+?(?=(\sb/)|(\r?\n))""".r
+
+  // Match anything until " and " or " differ"
+  def binaryFilePath: Parser[String] = """.+?(?=(\sand\s)|(\sdiffer\r?\n))""".r
 
   def similarity: Parser[Int] = """\d{1,3}""".r ^^ { _.toInt }
 
