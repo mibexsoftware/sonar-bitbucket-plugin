@@ -1,0 +1,3 @@
+diff --git a/ui/pnpm-lock.yaml b/ui/pnpm-lock.yaml
+index d1549e0..06b7b7d 100644
+File excluded by pattern "pnpm-lock.yaml"
