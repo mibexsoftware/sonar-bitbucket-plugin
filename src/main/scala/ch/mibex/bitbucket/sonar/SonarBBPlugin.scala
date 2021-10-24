@@ -24,6 +24,7 @@ object SonarBBPlugin {
   final val BitbucketApproveUnapprove = "sonar.bitbucket.approvalFeatureEnabled"
   final val BitbucketBuildStatus = "sonar.bitbucket.buildStatusEnabled"
   final val SonarUnapprovalSeverityLevel = "sonar.bitbucket.maxSeverityApprovalLevel"
+  final val BitbucketGitBaseDir = "sonar.bitbucket.gitBaseDir"
 }
 
 
@@ -124,6 +125,13 @@ object SonarBBPlugin {
       defaultValue = "true",
       description = "If enabled, the plug-in will update the build status of the pull request depending on the " +
         "Sonar analysis result. The analysis and also the build is failed if there are any critical or blocker issues.",
+      global = true
+    ),
+    new Property(
+      key = SonarBBPlugin.BitbucketGitBaseDir,
+      name = "Base Git Directory",
+      defaultValue = ".",
+      description = "Use if Git directory is not same as current dir",
       global = true
     )
   )

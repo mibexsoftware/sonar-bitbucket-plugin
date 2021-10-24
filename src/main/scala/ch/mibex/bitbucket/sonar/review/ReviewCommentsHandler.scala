@@ -120,15 +120,27 @@ class ReviewCommentsHandler(
       .filter(i => SonarUtils.isSeverityGreaterOrEqual(i, Severity.valueOf(pluginConfig.minSeverity())))
 
   private def debugLogIssueStatistics(issues: Seq[PostJobIssue], issuesOnChangedLines: Seq[PostJobIssue]) {
+      debugLogIssuesStatistics(issues)
+      debugLogIssueStatisticsOnChangedLines(issuesOnChangedLines)
+  }
+
+  private def debugLogIssueStatisticsOnChangedLines(issuesOnChangedLines: Seq[PostJobIssue]) = {
+    if (logger.isDebugEnabled) {
+      logger.debug(LogUtils.f(s"Found ${issuesOnChangedLines.size} of these are on changed or new lines:"))
+      debugLogIssues(issuesOnChangedLines)
+    }
+  }
+
+  private def debugLogIssues(issues: Seq[PostJobIssue]) = {
+    issues foreach { i =>
+      logger.debug(LogUtils.f(s"  + ${i.componentKey()}:${i.line()}: ${i.message()}"))
+    }
+  }
+
+  private def debugLogIssuesStatistics(issues: Seq[PostJobIssue]) = {
     if (logger.isDebugEnabled) {
       logger.debug(LogUtils.f(s"Found ${issues.size} issues and ${issues.count(_.isNew)} of them are new:"))
-      issues.filter(_.isNew) foreach { i =>
-        logger.debug(LogUtils.f(s"  - ${i.componentKey()}:${i.line()}: ${i.message()}"))
-      }
-      logger.debug(LogUtils.f(s"And ${issuesOnChangedLines.size} of these are on changed or new lines:"))
-      issuesOnChangedLines foreach { i =>
-        logger.debug(LogUtils.f(s"  + ${i.componentKey()}:${i.line()}: ${i.message()}"))
-      }
+      debugLogIssues(issues)
     }
   }
 
