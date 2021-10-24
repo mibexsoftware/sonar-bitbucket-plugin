@@ -144,10 +144,13 @@ class BitbucketClient(config: SonarBBPluginConfig) {
       Option(comment("user").asInstanceOf[Map[String, Any]])
         .getOrElse(Map("uuid" -> ""))("uuid").asInstanceOf[String] equals uuid
 
+    def isDeleted(comment: Map[String, Any]): Boolean = 
+	  Option(comment("deleted").asInstanceOf[Boolean]).getOrElse(false)
+
     def fetchPullRequestCommentsPage(start: Int): (Option[Int], Seq[PullRequestComment]) = {
       fetchPage(s"/pullrequests/${pullRequest.id}/comments", f =
         response =>
-          for (comment <- response("values").asInstanceOf[Seq[Map[String, Any]]] if isFromUs(comment))
+          for (comment <- response("values").asInstanceOf[Seq[Map[String, Any]]] if isFromUs(comment) && !isDeleted(comment))
             yield {
               val commentId = comment("id").asInstanceOf[Int]
               val content = comment("content").asInstanceOf[Map[String, Any]]("raw").asInstanceOf[String]
